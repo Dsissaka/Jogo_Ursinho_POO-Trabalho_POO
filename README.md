@@ -24,9 +24,9 @@ Uma Classe p jogo (classe Pai);
 {
   Uma Classe para o personagem;
   {
-    Uma Classe para o Player;
-    Uma Classe para os inimigos;
-    Uma Classe para o NPC;
+    Um obj para o Player;
+    Um obj para os inimigos;
+    Um obj para o NPC;
   }
   Uma Classe para o cenario.
 }
