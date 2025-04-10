@@ -1,7 +1,7 @@
 # Ursinho-POO
 
 ## Objetivo
-Fazer um jogode plataforma do ursinho pooh, onde o ursinho pega busca pegar uma quantidade limitada de potes de mel,<br> e como principais inimigos/antagonistas tais como: abelhas e ursos.
+Fazer um jogo de plataforma do Ursinho pooh, onde o ursinho busca pegar uma quantidade limitada de potes de mel,<br> e como principais inimigos/antagonistas tais como: abelhas e ursos.
 
 ## Personagens
 
@@ -31,3 +31,9 @@ Uma Classe p jogo (classe Pai);
   Uma Classe para o cenario.
 }
 ```
+## Participantes
+* Issaka Diaw Seye
+* Lucas Leite Lima
+* Guilherme Batalini Vilches
+* Carlos Eduardo Nascimento
+* Gabriel Henrique Dias Gochs
