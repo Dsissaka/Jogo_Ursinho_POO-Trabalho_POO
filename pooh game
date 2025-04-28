@@ -5,14 +5,20 @@ class jogo:
 	func fase():
 		#gerenciamento das fases e inimigos
 
-
-
-class Pooh(jogo):
-var vida:int = 3
+class Personagem(jogo):
 	func animacao():
-		
-	func movimento():
-
+		#funcao abstrata
 	func verifica_colisao():
+		#funcao abstrata
 
-	func recebe_hit():
+class Pooh(Personagem):
+var vida:int = 10
+	func animacao.pooh():
+	func verifica_colisao.pooh():
+	func hit():
+	func movimento():
+		func pular():
+
+
+class Inimigo(Personagem):
+var vida:int = 1
