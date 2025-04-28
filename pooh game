@@ -18,7 +18,6 @@ var vida:int = 10
 	func hit():
 	func movimento():
 		func pular():
-
-
+                                                                                                
 class Inimigo(Personagem):
 var vida:int = 1
