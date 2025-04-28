@@ -1,0 +1,23 @@
+extends Node
+class jogo:
+	func inicializa():
+		#inicialização de itens como hud e outras classes
+	func fase():
+		#gerenciamento das fases e inimigos
+
+class Personagem(jogo):
+	func animacao():
+		#funcao abstrata
+	func verifica_colisao():
+		#funcao abstrata
+
+class Pooh(Personagem):
+var vida:int = 10
+	func animacao.pooh():
+	func verifica_colisao.pooh():
+	func hit():
+	func movimento():
+		func pular():
+                                                                                                
+class Inimigo(Personagem):
+var vida:int = 1
