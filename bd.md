@@ -6,8 +6,12 @@ Jogo{
             Inimigo{
               assadsad
             }
+            NPC{
+            asdad
+            }
             
-          }
+        }
+        
   Cenario{
             asda
         }
