@@ -1,0 +1,32 @@
+from abc import ABC, abstractmethod
+
+class Jogo:
+    def _init__(self, id_game, name, amount_honey, status):
+        self.id_game = id_game
+        self.name = name
+        self.amount_honey= amount_honey
+        self.status= status
+
+class Background(Jogo):
+    
+    
+    
+    
+
+class Personagens(Jogo):
+    def __init__(self, id_game, id_character, sprite,  name, pos_X, pos_Y):
+        super().__init__(id_game)
+        self.id_character= id_character
+        self.sprite= sprite
+        self.name= name
+        self.pos_X = pos_X
+        self.pos_y= pos_Y
+
+    @abstractmethod
+    def animation(self):
+        pass
+
+    @abstractmethod
+    def verifica_colisao(self):
+        pass
+
