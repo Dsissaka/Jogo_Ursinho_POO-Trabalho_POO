@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 class Jogo:
-    def _init__(self, id_game, name, amount_honey, status):
+    def __init__(self, id_game, name, amount_honey, status):
         self.id_game = id_game
         self.name = name
         self.amount_honey= amount_honey
@@ -24,7 +24,7 @@ class Plataforma(Background):
 
 class Honey(Background):
     def __init__(self, id_honey, posx_honey, posy_honey, id_background):
-        super().__inti__(id_background)
+        super().__init__(id_background)
         self.id_honey = id_honey
         self.posx_honey= posx_honey
         self.posy_honey= posy_honey
@@ -48,7 +48,11 @@ class Personagens(Jogo):
         pass
 
     @abstractmethod
-    def verifica_colisao(self):
+    def verifica_colisao(self, outro_px, outro_py):
+        pass
+
+    @abstractmethod
+    def movimento(self):
         pass
 
 class Npc(Personagens):
@@ -74,11 +78,7 @@ class Player(Personagens):
         super().__init__(id_character)
         self.speed = speed
 
-    def verifica_colisao(self):
-        return super().verifica_colisao()
-    
     def fazer_animacao(self):
         return super().fazer_animacao()
     
 class Inimigo(Personagens):
-    
