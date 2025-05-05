@@ -43,7 +43,7 @@ class Personagens(Jogo):
 
 
     @abstractmethod
-    def fazer_animacao(self):
+    def fazer_animacao(self, tipo):
         pass
 
     @abstractmethod
@@ -57,11 +57,21 @@ class Personagens(Jogo):
 class Npc(Personagens):
     def __init__(self, id_game, name_character, status, id_character, sprite, pos_x, pos_y, animation, text_box, hitbox_px_npc, hitbox_py_npc, vida):
         super().__init__(id_game, status, id_character, sprite,  name_character, pos_x, pos_y, animation, vida)
+        self.text_box=text_box
+        self.hitbox_px_npc=hitbox_px_npc
+        self.hitbox_py_npc=hitbox_py_npc
 
-    def verifica_colisao(self, posx_pooh, posy_pooh):
-        
+    def movimento(self):
+        return 
     
-    def fazer_animacao(self):
+    def fazer_animacao(self, tipo):
+        if tipo =="idle":
+            #terminar
+
+    def verifica_colisao(self, outro_px, outro_py):
+        if outro_px == self.hitbox_px_npc and outro_py == self.hitbox_py_npc:
+            return True
+
         
     
 class Player(Personagens):
