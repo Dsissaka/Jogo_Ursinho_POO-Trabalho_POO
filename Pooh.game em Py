@@ -67,6 +67,8 @@ class Npc(Personagens):
     def fazer_animacao(self, tipo):
         if tipo =="idle":
             #terminar
+            pass
+            # temporariamente apenas, terminar
 
     def verifica_colisao(self, outro_px, outro_py):
         if outro_px == self.hitbox_px_npc and outro_py == self.hitbox_py_npc:
@@ -74,7 +76,7 @@ class Npc(Personagens):
 
         
     
-class Player(Personagens):
+class Player(Personagens, ABC):
     def __init__ (self, id_game, amount_honey_coletada, name_character, status, id_character, sprite, pos_x, pos_y, animation, text_box, hitbox_px_player, hitbox_py_player, vida, speed):
         super().__init__(id_game, status, id_character, sprite, name_character, pos_x, pos_y, animation, vida)
         self.hitbox_px_player =hitbox_px_player
@@ -83,8 +85,9 @@ class Player(Personagens):
         self.speed = speed
         self.text_box= text_box
 
-    def fazer_animacao(self):
-        
+    def fazer_animacao(self, tipo):
+        #terminar
+        pass
     
 class Inimigo(Personagens):
     def __init__(self, id_game, name_character, status, id_character, sprite, pos_x, pos_y, animation, text_box, hitbox_px_enemy, hitbox_py_enemy, vida, speed, moveset):
@@ -93,6 +96,8 @@ class Inimigo(Personagens):
         self.hitbox_px_enemy=hitbox_px_enemy
         self.hitbox_py_enemy=hitbox_py_enemy
         self.speed= speed
+        self.moveset = moveset
 
     def ataque(self):
-        
+        #terminar
+        pass
