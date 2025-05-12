@@ -65,8 +65,15 @@ class Npc(Personagens):
         return 
     
     def fazer_animacao(self, tipo):
-        if tipo =="idle":
+        if tipo == "idle":
+            pass
             #terminar
+
+        elif tipo == "morte_npc":
+            pass
+            #terminar
+
+        elif tipo == "morte_poo":
             pass
             # temporariamente apenas, terminar
 
