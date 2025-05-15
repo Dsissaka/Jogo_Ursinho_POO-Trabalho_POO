@@ -42,6 +42,13 @@ class Personagens(Jogo):
         self.animation = animation
         self.vida = vida
 
+        #ID DE PERSONAGEM
+        #0 = POOH
+        #1 = ABELHA
+        #2 = NPC
+        #3= BOSS
+
+
 
     @abstractmethod
     def fazer_animacao(self, tipo):
@@ -84,6 +91,7 @@ class Player(Personagens, ABC):
         self.speed = speed
         self.text_box= text_box
 
+       
     def movimento(self):
         tecla = pygame.key.get_pressed()
         if tecla[pygame.K_LEFT]:
@@ -130,9 +138,23 @@ def main():
     screen = pygame.display.set_mode((1920, 1080))
     clock = pygame.time.Clock()
     running = True
-    pooh_idle_sprites = [
+    Poo= Player(1, 0, "POOH", 0, 0, sprite_poo, 0, 0, )
+    sprite_poo = [
+                pooh_idle_sprites = [
     #endereço para as sprites em idle do pooh
-    ]
+                ]
+                pooh_movimento_D_sprites = [
+
+                ]
+                pooh_movimento_E_sprites = [
+
+                ]
+                pooh_movimento_U_sprites = [
+
+                ]
+        ]
+    
+
     npc_idle_sprites= [
     #endereco para as sprites em idle do npc
     ]
