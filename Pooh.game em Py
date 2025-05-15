@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import pygame
 
 class Jogo:
     def __init__(self, id_game, status):
@@ -66,22 +67,13 @@ class Npc(Personagens):
     
     def fazer_animacao(self, tipo):
         if tipo == "idle":
-            pass
             #terminar
 
-        elif tipo == "morte_npc":
-            pass
-            #terminar
 
-        elif tipo == "morte_poo":
-            pass
-            # temporariamente apenas, terminar
 
     def verifica_colisao(self, outro_px, outro_py):
         if outro_px == self.hitbox_px_npc and outro_py == self.hitbox_py_npc:
-            return True
-
-        
+            return True        
     
 class Player(Personagens, ABC):
     def __init__ (self, id_game, amount_honey_coletada, name_character, status, id_character, sprite, pos_x, pos_y, animation, text_box, hitbox_px_player, hitbox_py_player, vida, speed):
@@ -92,9 +84,27 @@ class Player(Personagens, ABC):
         self.speed = speed
         self.text_box= text_box
 
+    def movimento(self):
+        tecla = pygame.key.get_pressed()
+        if tecla[pygame.K_LEFT]:
+            self.pos_x -= self.speed
+        if tecla[pygame.K_RIGHT]:
+            self.pos_x += self.speed
+        if tecla[pygame.K_UP]:
+            self.pos_y -= self.speed
+        if tecla[pygame.K_DOWN]:
+            self.pos_y += self.speed
+
+
     def fazer_animacao(self, tipo):
         #terminar
         pass
+
+    def ataque(self, outro):
+         if self.name_character == "POOH":
+            dano_ataque=3
+            outro.vida = outro.vida-dano_ataque
+
     
 class Inimigo(Personagens):
     def __init__(self, id_game, name_character, status, id_character, sprite, pos_x, pos_y, animation, text_box, hitbox_px_enemy, hitbox_py_enemy, vida, speed, moveset):
@@ -105,6 +115,37 @@ class Inimigo(Personagens):
         self.speed= speed
         self.moveset = moveset
 
-    def ataque(self):
-        #terminar
-        pass
+    def ataque(self, outro):
+        if self.name_character == 'ABELHA':
+            dano_ataque = 1
+            outro.vida = outro.vida - dano_ataque
+            
+
+    def verifica_colisao(self, outro):
+        if self.rect.colliderect(outro.sprite.rect) :
+            return ataque(self, outro)
+
+def main():
+    pygame.init()
+    screen = pygame.display.set_mode((1920, 1080))
+    clock = pygame.time.Clock()
+    running = True
+    pooh_idle_sprites = [
+    #endereço para as sprites em idle do pooh
+    ]
+    npc_idle_sprites= [
+    #endereco para as sprites em idle do npc
+    ]
+
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        screen.fill((0, 0, 0))
+        pygame.display.flip()
+        clock.tick(60)
+    pygame.quit()
+
+if "__main__" == __name__:
+    main()
