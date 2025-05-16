@@ -107,8 +107,6 @@ class Player(Personagens, ABC):
             self.pos_x += self.speed
         if tecla[pygame.K_UP]:
             self.pos_y -= self.speed
-        if tecla[pygame.K_DOWN]:
-            self.pos_y += self.speed
 
 
     def fazer_animacao(self, tipo):
