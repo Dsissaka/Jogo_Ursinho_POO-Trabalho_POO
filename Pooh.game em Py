@@ -7,15 +7,16 @@ class Jogo:
         self.status= status #0 = parado/ 1 = rodando/ 2 = segundo plano
 
 class Background(Jogo):
-    def __init__(self, id_game, amount_honey, status, id_background, name_background):
+    def __init__(self, id_game, amount_honey, status, id_background, name_background, sprite_background):
         super().__init__(id_game, status)
         self.name_background = name_background #nome do mapa
         self.amount_honey= amount_honey #quantiade de méis disponiveis pelo mapa
         self.id_background = id_background #usado para identificar possiveis variações para um mesmo cenário (ex:versão noite e versão dia)
+        self.sprite_background = sprite_background
 
 class Plataforma(Background):
-    def __init__(self, id_game, amount_honey, status,id_background, id_plataforma, name_background, posx_plataforma, posy_plataforma, largura, altura):
-        super().__init__(id_game, amount_honey, status, id_background, name_background)
+    def __init__(self, id_game, amount_honey, status,id_background, id_plataforma, name_background, sprite_background, posx_plataforma, posy_plataforma, largura, altura):
+        super().__init__(id_game, amount_honey, status, id_background, name_background, sprite_background)
         self.id_plataforma =  id_plataforma #id especifico para pré-definicação e uma plataforma
         self.posx_plataforma =  posx_plataforma # posicionamento no eixo X da plataforma responsavel pela ilusao de movimento
         self.posy_plataforma = posy_plataforma # posicionamento no eixo Y da plataforma
@@ -92,7 +93,7 @@ class Npc(Personagens):
 class Player(Personagens, ABC):
     def __init__ (self, id_game, amount_honey_coletada, name_character, status, id_character, sprite, pos_x, pos_y, animation, text_box, hitbox_px_player, hitbox_py_player, vida, speed):
         super().__init__(id_game, status, id_character, sprite, name_character, pos_x, pos_y, animation, vida)
-        self.hitbox_px_player =hitbox_px_player
+        self.hitbox_px_player =hitbox_px_player # (precisamos definir como será feito o esquema de hitbox)
         self.hitbox_py_player= hitbox_py_player 
         self.amount_honey_coletada= amount_honey_coletada #quantidade de mel coletada pelo personagem
         self.speed = speed #velocidade de movimento do personagem
@@ -111,15 +112,15 @@ class Player(Personagens, ABC):
 
     def fazer_animacao(self, tipo):
         if tipo == "idle":
-            #terminar
+            #(terminar)
             pass
 
          if tipo == "morte_poo":
-            #terminar
+            #(terminar)
             pass
 
         if tipo == "deslocamento":
-            #terminar
+            #(terminar)
             pass
 
 
@@ -136,27 +137,78 @@ class Inimigo(Personagens):
         self.hitbox_py_enemy=hitbox_py_enemy
         self.speed= speed
 
-    def ataque(self, outro):
-            dano_ataque = 1
-            outro.vida = outro.vida - dano_ataque
+    def disparar_projetil(self):
             
 
     def verifica_colisao(self, outro):
-        if self.rect.colliderect(outro.sprite.rect) :
+        if self.rect.colliderect(outro.sprite.rect):
             pass
         #(terminar posteriormente)
+
+    def dispara_projetil(self):
+
+        largura_proj = None # definir posteriormente
+        altura_proj = None  # definir posteriormente
+        velocidade = None   # definir posteriormente
+        direcao = None      # definir posteriormente
+
+        projetil = Projetil(
+            velocidade_projetil= velocidade,
+            pos_x_projetil=self.pos_x, #por estar na classe inimigo, o puxam-se os dados de posicao e assim o ferrao parte da posicao do inimigo
+            pos_y_projetil=self.pos_y, #por estar na classe inimigo, o puxam-se os dados de posicao e assim o ferrao parte da posicao do inimigo
+            hitbox_projetil_px= largura_proj,
+            hitbox_projetil_py= altura_proj,
+            direcao= direcao
+        )
+        return projetil
         
 class Projetil:
-    def __init__(self, velocidade_projetil, hitbox_projetil_px, hitbox_projetil_py):
+    def __init__(self, velocidade_projetil, pos_x_projetil, pos_y_projetil, hitbox_projetil_px, hitbox_projetil_py, direcao, ativo):
         self.velocidade_projetil = velocidade_projetil
+        self.pos_x_projetil = pos_x_projetil
+        self.pos_y_projetil = pos_y_projetil
         self.hitbox_projetil_px = hitbox_projetil_px
         self.hitbox_projetil_py = hitbox_projetil_py
+        self.direcao = direcao #1 para direita/ -1 para esquerda
+        self.ativo = ativo 
+
+    def desativar(self):
+        #função para causar a exclusão da bala após ela sair do mapa ou após acertar o jogador
+        self.ativo = False
+        #terminar implementar posteriormente
+        pass
+
+    def mover(self):
+        self.pos_x_projetil = self.pos_x_projetil + (self.velocidade_projetil*self.direcao)
+
+    def verifica_colisao(self, outro):
+        #implementar posteriormente
+        pass
+
+    def atualizar(self, outro, largura_tela):
+        if self.ativo:
+            self.mover()
+            if self.verifica_colisao(outro):
+                outro.vida = outro.vida - 1 #caso atingido, O player perde uma vida
+                self.desativar() #exclui a bala p
+            if self.pos_x_projetil < 0 or self.pos_x_projetil > largura_tela: #caso saia do mapa
+                self.desativar()
+                #(decidir se talvez definir um timeout para chamada da função "atualizar" ou faze quando "verificar_colisão" for true)
+
+
+
+
+
+
+
 
 def main():
     pygame.init()
     screen = pygame.display.set_mode((1920, 1080))
     clock = pygame.time.Clock()
     running = True
+
+    
     Poo= Player(1, 0, "POOH", 0, 0, sprite_poo, 0, 0, )
     sprite_poo = (
                 pooh_idle_sprites = [
