@@ -69,6 +69,10 @@ class Personagens(Jogo):
         # Player possui movimentação baseada nas entradas do teclado
         pass
 
+class Animacao(Personagens):
+    pass
+    #terminar posteriormente
+
 class Npc(Personagens):
     def __init__(self, id_game, name_character, status, id_character, sprite, pos_x, pos_y, animation, text_box, hitbox_px_npc, hitbox_py_npc, vida, tam_x, tam_y):
         super().__init__(id_game, status, id_character, sprite,  name_character, pos_x, pos_y, animation, vida, tam_x, tam_y)
@@ -173,7 +177,7 @@ class Inimigo(Personagens):
             hitbox_projetil_py= altura_proj,
             direcao= direcao
         )
-        projetil.atualizar(self, outro, largura_tela)
+        projetil.atualizar(outro, largura_tela)
         
 class Projetil:
     def __init__(self, velocidade_projetil, pos_x_projetil, pos_y_projetil, hitbox_projetil_px, hitbox_projetil_py, direcao, ativo):
@@ -189,7 +193,6 @@ class Projetil:
         #função para causar a exclusão da bala após ela sair do mapa ou após acertar o jogador
         self.ativo = False
         #terminar implementar posteriormente
-        pass
 
     def mover(self):
         self.pos_x_projetil = self.pos_x_projetil + (self.velocidade_projetil*self.direcao)
@@ -218,24 +221,13 @@ def main():
     running = True
 
     
-    Poo= Player(1, 0, "POOH", 0, 0, sprite_poo, 0, 0, )
+    Poo= Player()
+
     sprite_poo = {
-                pooh_idle_sprites = [
-                    #endereço para as sprites em idle do pooh
-                ]
-
-                pooh_movimento_D_sprites = [
-                    #enreço para sprites para movimento a direita
-                ]
-
-                pooh_movimento_E_sprites = [
-                    #enreço para sprites para movimento a esquerda
-                ]
-
-                pooh_movimento_U_sprites = [
-                    
-                    #enreço para sprites para movimento pulando
-                ]
+    "pooh_idle_sprites": [],
+    "pooh_movimento_D_sprites": [],
+    "pooh_movimento_E_sprites": [],
+    "pooh_movimento_U_sprites": [] 
     }
 
     
