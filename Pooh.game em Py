@@ -31,7 +31,7 @@ class Honey(Background):
     
 
 class Personagens(Jogo):
-    def __init__(self, id_game, status, id_character, sprite,  name_character, pos_x, pos_y, vida):
+    def __init__(self, id_game, status, id_character, sprite,  name_character, pos_x, pos_y, vida, tam_x, tam_y):
         super().__init__(id_game, status)
         self.id_character= id_character #id de identificação do personagem
         self.sprite= sprite #biblioteca responsavel por armazenar as sprites dos personagens
@@ -39,6 +39,8 @@ class Personagens(Jogo):
         self.pos_x = pos_x #posicao no eixo X do personagem em relação ao mapa
         self.pos_y= pos_y #posicao no eixo Y do personagem em relação ao mapa
         self.vida = vida #contador de vida do personagem
+        self.tam_x = tam_x #altura do personagem
+        self.tam_y = tam_y # largura do personagem
 
         #ID DE PERSONAGEM
         #0 = POOH
@@ -68,8 +70,8 @@ class Personagens(Jogo):
         pass
 
 class Npc(Personagens):
-    def __init__(self, id_game, name_character, status, id_character, sprite, pos_x, pos_y, animation, text_box, hitbox_px_npc, hitbox_py_npc, vida):
-        super().__init__(id_game, status, id_character, sprite,  name_character, pos_x, pos_y, animation, vida)
+    def __init__(self, id_game, name_character, status, id_character, sprite, pos_x, pos_y, animation, text_box, hitbox_px_npc, hitbox_py_npc, vida, tam_x, tam_y):
+        super().__init__(id_game, status, id_character, sprite,  name_character, pos_x, pos_y, animation, vida, tam_x, tam_y)
         self.text_box=text_box #frase dita pelo npc ao haver colisão com o personagem principal
         self.hitbox_px_npc=hitbox_px_npc
         self.hitbox_py_npc=hitbox_py_npc
@@ -91,13 +93,18 @@ class Npc(Personagens):
             return True        
     
 class Player(Personagens, ABC):
-    def __init__ (self, id_game, amount_honey_coletada, name_character, status, id_character, sprite, pos_x, pos_y, animation, text_box, hitbox_px_player, hitbox_py_player, vida, speed):
-        super().__init__(id_game, status, id_character, sprite, name_character, pos_x, pos_y, animation, vida)
+    def __init__ (self, id_game, amount_honey_coletada, name_character, status, id_character, sprite, pos_x, pos_y, animation, text_box, hitbox_px_player, hitbox_py_player, vida, tam_x, tam_y, speed):
+        super().__init__(id_game, status, id_character, sprite, name_character, pos_x, pos_y, animation, vida, tam_x, tam_y)
         self.hitbox_px_player =hitbox_px_player # (precisamos definir como será feito o esquema de hitbox)
         self.hitbox_py_player= hitbox_py_player 
         self.amount_honey_coletada= amount_honey_coletada #quantidade de mel coletada pelo personagem
         self.speed = speed #velocidade de movimento do personagem
         self.text_box= text_box #texto da caixa e dialogo para 
+
+    def verifica_colisao(self, outro):
+        if outro.hitbox_px_player == self.hitbox_px_npc or outro.hitbox_py_player == self.hitbox_py_npc:
+            #neste caso, "outro" seria o objeto deriado de Player 
+            return True   
 
        
     def movimento(self):
@@ -108,6 +115,8 @@ class Player(Personagens, ABC):
             self.pos_x += self.speed
         if tecla[pygame.K_UP]:
             self.pos_y -= self.speed
+
+            #(precisamos implementar um sistema pra simular a gravidade do poo, se não ele simplesmente sobe e nao desce)
 
 
     def fazer_animacao(self, tipo):
@@ -125,28 +134,32 @@ class Player(Personagens, ABC):
 
 
     def ataque(self, outro):
-            dano_ataque=3
-            outro.vida = outro.vida-dano_ataque
+        if self.verifica_colisao(self, outro):
+            if self.pos_y > (outro.pos_y + outro.tam_y/1.5):
+                dano_ataque=3
+                outro.vida = outro.vida-dano_ataque
+                #poo mata quicando 
+        
 
     
 class Inimigo(Personagens):
-    def __init__(self, id_game, name_character, status, id_character, sprite, pos_x, pos_y, animation, text_box, hitbox_px_enemy, hitbox_py_enemy, vida, speed):
-        super().__init__(id_game, status, id_character, sprite,  name_character, pos_x, pos_y, animation, vida)
+    def __init__(self, id_game, name_character, status, id_character, sprite, pos_x, pos_y, animation, text_box, hitbox_px_enemy, hitbox_py_enemy, vida, tam_x, tam_y, speed):
+        super().__init__(id_game, status, id_character, sprite,  name_character, pos_x, pos_y, animation, vida, tam_x, tam_y)
         self.text_box= text_box
         self.hitbox_px_enemy=hitbox_px_enemy
         self.hitbox_py_enemy=hitbox_py_enemy
         self.speed= speed
 
     def disparar_projetil(self):
+        pass 
+        #terminar posteriormente
             
 
     def verifica_colisao(self, outro):
-        if self.rect.colliderect(outro.sprite.rect):
-            pass
+        pass
         #(terminar posteriormente)
 
-    def dispara_projetil(self):
-
+    def dispara_projetil(self, outro, largura_tela):
         largura_proj = None # definir posteriormente
         altura_proj = None  # definir posteriormente
         velocidade = None   # definir posteriormente
@@ -160,7 +173,7 @@ class Inimigo(Personagens):
             hitbox_projetil_py= altura_proj,
             direcao= direcao
         )
-        return projetil
+        projetil.atualizar(self, outro, largura_tela)
         
 class Projetil:
     def __init__(self, velocidade_projetil, pos_x_projetil, pos_y_projetil, hitbox_projetil_px, hitbox_projetil_py, direcao, ativo):
@@ -186,20 +199,16 @@ class Projetil:
         pass
 
     def atualizar(self, outro, largura_tela):
-        if self.ativo:
+        while self.ativo:
             self.mover()
             if self.verifica_colisao(outro):
                 outro.vida = outro.vida - 1 #caso atingido, O player perde uma vida
-                self.desativar() #exclui a bala p
+                self.desativar() #exclui a bala 
+                return
             if self.pos_x_projetil < 0 or self.pos_x_projetil > largura_tela: #caso saia do mapa
                 self.desativar()
+                return
                 #(decidir se talvez definir um timeout para chamada da função "atualizar" ou faze quando "verificar_colisão" for true)
-
-
-
-
-
-
 
 
 def main():
@@ -210,7 +219,7 @@ def main():
 
     
     Poo= Player(1, 0, "POOH", 0, 0, sprite_poo, 0, 0, )
-    sprite_poo = (
+    sprite_poo = {
                 pooh_idle_sprites = [
                     #endereço para as sprites em idle do pooh
                 ]
@@ -222,10 +231,13 @@ def main():
                 pooh_movimento_E_sprites = [
                     #enreço para sprites para movimento a esquerda
                 ]
+
                 pooh_movimento_U_sprites = [
+                    
                     #enreço para sprites para movimento pulando
                 ]
-    )
+    }
+
     
 
     while running:
