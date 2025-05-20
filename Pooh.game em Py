@@ -9,7 +9,6 @@ class Jogo:
     def __init__(self, id_game, status):
         self.id_game = id_game # pode ser usado para recuperar logs de sessões passadas
                                 #podemos usar escrita em arquivos para isso
-
         self.status= status #0 = parado/ 1 = rodando/ 2 = segundo plano
 
 class Background(Jogo):
@@ -90,10 +89,6 @@ class Personagens(Jogo):
         # Player possui movimentação baseada nas entradas do teclado
         pass
 
-class Animacao(Personagens):
-    pass
-    #terminar posteriormente
-
 class Npc(Personagens, ABC):
     def __init__(self, id_game, name_character, status, id_character, sprite, pos_x, pos_y, text_box, vida, tam_x, tam_y):
         super().__init__(id_game, status, id_character, sprite,  name_character, pos_x, pos_y, vida, tam_x, tam_y)
@@ -114,11 +109,10 @@ class Npc(Personagens, ABC):
         return hitbox_npc.colliderect(hitbox_outro)
     
 class Player(Personagens, ABC):
-    def __init__ (self, id_game, amount_honey_coletada, name_character, status, id_character, sprite, pos_x, pos_y, text_box, vida, tam_x, tam_y, speed, no_chao, speed_jump):
+    def __init__ (self, id_game, name_character, status, id_character, sprite, pos_x, pos_y, vida, tam_x, tam_y, speed, no_chao, speed_jump, amount_honey_coletada):
         super().__init__(id_game, status, id_character, sprite, name_character, pos_x, pos_y, vida, tam_x, tam_y)
         self.amount_honey_coletada = amount_honey_coletada #quantidade de mel coletada pelo personagem
         self.speed = speed #velocidade de movimento do personagem
-        self.text_box= text_box #texto da caixa e dialogo para 
         self.no_chao = no_chao #variável para definir o contato do poo com o chão
         self.speed_jump = speed_jump
 
@@ -138,8 +132,7 @@ class Player(Personagens, ABC):
         if tecla[pygame.K_UP]:
             self.pos_y += self.speed
             while self.no_chao == False: 
-                for _ in range(0):
-                    self.speed_jump= self.speed -1
+                self.speed_jump= self.speed -1
             self.no_chao = True
 
 
@@ -160,24 +153,20 @@ class Player(Personagens, ABC):
 
     def ataque(self, outro):
         if self.verifica_colisao(outro):
-            if self.pos_y > (outro.pos_y + outro.tam_y/1.1):
+            if self.pos_y > (outro.pos_y + (outro.tam_y/1.1)):
                 dano_ataque=3
                 outro.vida = outro.vida-dano_ataque
                 #poo mata quicando 
-
-                #definir um sistema de knockback
                 if outro.vida == 0:
                     outro.fazer_animacao("morte_enemy")
                     outro.ativo= False
+            #talvez definir um sistema de knockback
 
-
-        
-
-    
 class Inimigo(Personagens, ABC):
-    def __init__(self, id_game, name_character, status, id_character, sprite, pos_x, pos_y, text_box, vida, tam_x, tam_y, speed, ativo):
+    def __init__(self, id_game, name_character, status, id_character, sprite, pos_x, pos_y, text_box, vida, tam_x, tam_y, speed, inimigo_ativo, ativo):
         super().__init__(id_game, status, id_character, sprite,  name_character, pos_x, pos_y, vida, tam_x, tam_y)
         self.ativo = ativo
+        self.inimigo_ativo= inimigo_ativo
         self.text_box= text_box
         self.speed= speed 
 
@@ -188,19 +177,21 @@ class Inimigo(Personagens, ABC):
 
 
     def dispara_projetil(self, outro, largura_tela):
-        largura_proj = None # definir posteriormente
-        altura_proj = None  # definir posteriormente
         velocidade = None   # definir posteriormente
         direcao = None      # definir posteriormente
         distancia_disparo = None #distancia minima para o inimigo atirar contra poo
-        ativo = None
+        proj_ativo =True    
+        largura_proj = None # definir posteriormente
+        altura_proj = None  # definir posteriormente
         if (self.pos_x - outro.pos_x) <= distancia_disparo :
                 projetil = Projetil(
                     velocidade_projetil= velocidade,
                     pos_x_projetil=self.pos_x, #por estar na classe inimigo, o puxam-se os dados de posicao e assim o ferrao parte da posicao do inimigo
                     pos_y_projetil=self.pos_y, #por estar na classe inimigo, o puxam-se os dados de posicao e assim o ferrao parte da posicao do inimigo
                     direcao= direcao,
-                    ativo = ativo
+                    ativo = proj_ativo,
+                    largura_proj = largura_proj,
+                    altura_proj = altura_proj
         )
         
         while projetil.ativo:
@@ -224,13 +215,15 @@ class Inimigo(Personagens, ABC):
             pass
         
 class Projetil:
-    def __init__(self, velocidade_projetil, pos_x_projetil, pos_y_projetil, hitbox_projetil, direcao, ativo):
+    def __init__(self, velocidade_projetil, pos_x_projetil, pos_y_projetil, hitbox_projetil, direcao, ativo, largura_proj, altura_proj):
         self.velocidade_projetil = velocidade_projetil
         self.pos_x_projetil = pos_x_projetil
         self.pos_y_projetil = pos_y_projetil
         self.hitbox_projetil = hitbox_projetil
         self.direcao = direcao #1 para direita/ -1 para esquerda
         self.ativo = ativo 
+        self.altura_proj = altura_proj
+        self.largura_proj = largura_proj
 
     def desativar(self):
         #função para causar a exclusão da bala após ela sair do mapa ou após acertar o jogador
@@ -241,7 +234,7 @@ class Projetil:
         self.pos_x_projetil = self.pos_x_projetil + (self.velocidade_projetil*self.direcao)
 
     def verifica_colisao(self, outro):
-        hitbox_projetil = pygame.Rect(self.pos_x_projetil, self.pos_y_projetil, self.hitbox_projetil[0], self.hitbox_projetil[1])
+        hitbox_projetil = pygame.Rect(self.pos_x_projetil, self.pos_y_projetil, self.largura_proj, self.altura_proj)
         hitbox_outro = pygame.Rect(outro.pos_x, outro.pos_y, outro.tam_x, outro.tam_y)
         return hitbox_projetil.colliderect(hitbox_outro)
 
