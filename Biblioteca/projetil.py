@@ -1,3 +1,5 @@
+import pygame
+
 class Projetil:
     def __init__(self, velocidade_projetil, pos_x_projetil, pos_y_projetil, direcao, ativo, largura_proj, altura_proj):
         self.velocidade_projetil = velocidade_projetil
