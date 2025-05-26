@@ -22,10 +22,8 @@ class Projetil:
         hitbox_projetil = pygame.Rect(self.pos_x_projetil, self.pos_y_projetil, self.largura_proj, self.altura_proj)
         hitbox_outro = pygame.Rect(outro.pos_x, outro.pos_y, outro.tam_x, outro.tam_y)
         return hitbox_projetil.colliderect(hitbox_outro)
-
-
-def atualizar( outro, largura_tela):
-                while ativo:
+        
+    def atualizar( outro, largura_tela):
                     mover()
                         if verifica_colisao(outro):
                             outro.vida = outro.vida - 1 #caso atingido, O player perde uma vida
@@ -36,23 +34,4 @@ def atualizar( outro, largura_tela):
                         return
                 #(decidir se talvez definir um timeout para chamada da função "atualizar" ou faze quando "verificar_colisão" for true)
 
-    def dispara_projetil(self, outro, largura_tela):
-        velocidade = None   # definir posteriormente
-        direcao = None      # definir posteriormente
-        distancia_disparo = None #distancia minima para o inimigo atirar contra poo
-        proj_ativo =True    
-        largura_proj = None # definir posteriormente
-        altura_proj = None  # definir posteriormente
-        if (self.pos_x - outro.pos_x) <= distancia_disparo :
-                projetil = Projetil(
-                    velocidade_projetil= velocidade,
-                    pos_x_projetil=self.pos_x, #por estar na classe inimigo, o puxam-se os dados de posicao e assim o ferrao parte da posicao do inimigo
-                    pos_y_projetil=self.pos_y, #por estar na classe inimigo, o puxam-se os dados de posicao e assim o ferrao parte da posicao do inimigo
-                    direcao= direcao,
-                    ativo = proj_ativo,
-                    largura_proj = largura_proj,
-                    altura_proj = altura_proj
-        )
         
-        while projetil.ativo:
-            projetil.atualizar(outro, largura_tela)
