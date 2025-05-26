@@ -33,3 +33,24 @@ def atualizar( outro, largura_tela):
                         desativar()
                         return
                 #(decidir se talvez definir um timeout para chamada da função "atualizar" ou faze quando "verificar_colisão" for true)
+
+    def dispara_projetil(self, outro, largura_tela):
+        velocidade = None   # definir posteriormente
+        direcao = None      # definir posteriormente
+        distancia_disparo = None #distancia minima para o inimigo atirar contra poo
+        proj_ativo =True    
+        largura_proj = None # definir posteriormente
+        altura_proj = None  # definir posteriormente
+        if (self.pos_x - outro.pos_x) <= distancia_disparo :
+                projetil = Projetil(
+                    velocidade_projetil= velocidade,
+                    pos_x_projetil=self.pos_x, #por estar na classe inimigo, o puxam-se os dados de posicao e assim o ferrao parte da posicao do inimigo
+                    pos_y_projetil=self.pos_y, #por estar na classe inimigo, o puxam-se os dados de posicao e assim o ferrao parte da posicao do inimigo
+                    direcao= direcao,
+                    ativo = proj_ativo,
+                    largura_proj = largura_proj,
+                    altura_proj = altura_proj
+        )
+        
+        while projetil.ativo:
+            projetil.atualizar(outro, largura_tela)
