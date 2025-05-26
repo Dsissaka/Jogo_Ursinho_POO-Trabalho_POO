@@ -23,15 +23,15 @@ class Projetil:
         hitbox_outro = pygame.Rect(outro.pos_x, outro.pos_y, outro.tam_x, outro.tam_y)
         return hitbox_projetil.colliderect(hitbox_outro)
         
-    def atualizar( outro, largura_tela):
-                    mover()
-                        if verifica_colisao(outro):
+    def atualizar(self, outro, largura_tela):
+                    self.mover()
+                    if self.verifica_colisao(outro):
                             outro.vida = outro.vida - 1 #caso atingido, O player perde uma vida
-                            desativar() #exclui a bala 
+                            self.desativar() #exclui a bala 
                             return
-                    if pos_x_projetil < 0 or self.pos_x_projetil > largura_tela: #caso saia do mapa
-                        desativar()
-                        return
+                    if self.pos_x_projetil < 0 or self.pos_x_projetil > largura_tela: #caso saia do mapa
+                        self.desativar()
+
                 #(decidir se talvez definir um timeout para chamada da função "atualizar" ou faze quando "verificar_colisão" for true)
 
         
