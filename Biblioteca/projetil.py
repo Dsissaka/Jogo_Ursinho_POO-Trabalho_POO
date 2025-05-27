@@ -23,7 +23,7 @@ class Projetil:
         hitbox_outro = pygame.Rect(outro.pos_x, outro.pos_y, outro.tam_x, outro.tam_y)
         return hitbox_projetil.colliderect(hitbox_outro)
         
-    def atualizar(self, outro, largura_tela):
+    def atualizar(self, outro):
                     self.mover()
                     if self.verifica_colisao(outro):
                             outro.vida = outro.vida - 1 #caso atingido, O player perde uma vida
