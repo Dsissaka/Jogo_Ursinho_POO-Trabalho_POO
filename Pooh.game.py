@@ -1,9 +1,5 @@
 #terminar o encapsulamento dos atributos
 
-
-
-
-
 from abc import ABC, abstractmethod
 import pygame
 from Biblioteca import Projetil as Pj # IMPORTA A CLASSE PROJETIL
@@ -12,7 +8,7 @@ from Biblioteca import Animacao as Am #Importa a classe animacao
 ALTURA_TELA = 600
 COMPRIMENTO_TELA = 800
 GRAVIDADE = 1
-INTERVALO_DISPARO = 1500 # 1.5 segundos
+INTERVALO_DISPARO = 3000 # 1.5 segundos
 
 class Jogo():
     def __init__(self, id_game):
@@ -52,7 +48,7 @@ class Honey(Background):
         self.__tam_y=tam_y
         self._ativo = ativo
 
-    def desavitar(self):
+    def desativar(self):
         self._ativo= False
 
     def verifica_colisao(self, outro):
@@ -104,14 +100,15 @@ class Personagens(Jogo, ABC):
         pass
 
 class Npc(Personagens):
-    def __init__(self, id_game, name_character, id_character, sprite, pos_x, pos_y, text_box, vida, tam_x, tam_y):
+    def __init__(self, id_game, name_character, id_character, sprite, pos_x, pos_y, vida, tam_x, tam_y):
         super().__init__(id_game, id_character,  name_character, pos_x, pos_y, vida, tam_x, tam_y)
-        self.__text_box=text_box #frase dita pelo npc ao haver colisão com o personagem principal
+ 
         self.sprite = sprite
         self.animacao = Am(sprite)
 
     def comentario(self):
-        print(self.__text_box)
+        text_box = "Cuidado com as abelhas" #frase dita pelo npc ao haver colisão com o personagem principal
+        print(text_box)
 
     def fazer_animacao(self, tipo):
         self.animacao.definir_estado(tipo)
@@ -145,24 +142,25 @@ class Player(Personagens):
         self.animacao.definir_estado(tipo)
 
     def movimento(self):
+        animacao = "pooh_idle_sprites.png"
         tecla = pygame.key.get_pressed()
-        animacao = "pooh_idle_sprites"
-        self.fazer_animacao(animacao)
 
         if tecla[pygame.K_LEFT]:
             self._pos_x -= self._speed
-            animacao = "pooh_movimento_E_sprites"
-            self.fazer_animacao(animacao)
+            animacao = "pooh_movimento_E_sprites.png"
+
 
         elif tecla[pygame.K_RIGHT]:
             self._pos_x += self._speed
-            animacao = "pooh_movimento_D_sprites"
-            self.fazer_animacao(animacao)
+            animacao = "pooh_movimento_D_sprites.png"
+
 
         elif tecla[pygame.K_UP]:
             self._pos_y -= self._speed
-            animacao = "pooh_movimento_U_sprites"
-            self.fazer_animacao(animacao)
+            animacao = "pooh_movimento_U_sprites.png"
+            #terminar a implementação para que o poo volte para o chão
+
+        self.fazer_animacao(animacao)
 
 
     def ataque(self, outro):
@@ -172,8 +170,7 @@ class Player(Personagens):
                 outro.vida = outro.vida-dano_ataque
                 #poo mata quicando 
                 if outro.vida == 0:
-                    outro.fazer_animacao("morte_enemy")
-                    outro.ativo= False
+                    outro.inimigo_ativo= False
             #talvez definir um sistema de knockback
             #ainda definir como funcionará a chamada para computar a morte do inimigo
 
@@ -192,21 +189,18 @@ class Inimigo(Personagens):
         return hitbox_inimigo.colliderect(hitbox_outro)
 
     def movimento(self):
-        # terminar posteriormente
-        pass
+        if self._id_character == 1:
+            #movimentação cima/baixo para abelha comum
+            pass
+
+        elif self._id_character == 3:
+            #ainda definir um movimento para o boss
+            pass
+         
 
     def fazer_animacao(self, tipo):
-        if tipo == "idle":
-            #(terminar)
-            pass
+        self.animacao.definir_estado(tipo)
 
-        if tipo == "morte_enemy":
-            #(terminar)
-            pass
-
-        if tipo == "deslocamento":
-            #(terminar)
-            pass
     
     def dispara_projetil(self, outro):
         velocidade = 10   # definir posteriormente
@@ -216,6 +210,7 @@ class Inimigo(Personagens):
         proj_ativo =True    
         largura_proj = 10 # definir posteriormente
         altura_proj = 10  # definir posteriormente
+        sprite_proj = Am.pega_sprite_na_pasta("Assets/Projetil/bala.png")
         if abs(self.pos_x - outro.pos_x) <= distancia_disparo :
                 projetil = Pj(
                     velocidade_projetil= velocidade,
@@ -224,7 +219,8 @@ class Inimigo(Personagens):
                     direcao= direcao,
                     ativo = proj_ativo,
                     largura_proj = largura_proj,
-                    altura_proj = altura_proj
+                    altura_proj = altura_proj,
+                    sprite = sprite_proj
         )
         return projetil
     
@@ -233,9 +229,10 @@ def main():
     pygame.init()
     tela = pygame.display.set_mode((COMPRIMENTO_TELA,ALTURA_TELA))
     pygame.display.set_caption("jogo poo")
-    clock = pygame.time.Clock()
+    relogio = pygame.time.Clock()
     running = True
 
+#inicio da parte de declaração e preenchimento de sprites
     sprite_poo = {
         "pooh_idle_sprites": Am.pega_sprite_na_pasta("Assets/Pooh/idle"),
         "pooh_movimento_D_sprites": Am.pega_sprite_na_pasta("Assets/Pooh/direita"),
@@ -264,7 +261,9 @@ def main():
     sprite_mapa= {
         "mapa_original_sprite": Am.pega_sprite_na_pasta("Assets/Mapa/mapa_original")
     }
+#fim da parte de declaração e preenchimento de sprites
 
+#inicio da parte de declaração e preenchimento de objetos
     poo = Player(
     id_game=1,
     amount_honey_coletada= 0,
@@ -288,7 +287,6 @@ def main():
         sprite = sprite_leitao,
         pos_x= None,    #definir quando o mapa ficar pronto
         pos_y= None,    #definir quando o mapa ficar pronto
-        text_box= "Cuidado com as abelhas!",   #definir a frase do npc
         vida = 9999,    #npc não morre
         tam_x= None,    #definir conforme a sprite
         tam_y= None,    #definir conforme a sprite
@@ -330,48 +328,65 @@ def main():
         posy_plataforma= None,  #a definir
         largura= None,          #a definir
         altura= None            #a definir
-
     )
+#inicio da parte de declaração e preenchimento de objetos
+
     projeteis_ativos = []
     ultimo_disparo_boss = pygame.time.get_ticks()
 
     while running:
+        tela.fill((0, 0, 0))  # Limpa a tela
         for evento in pygame.event.get():
-            poo.movimento()
-            dt = clock.tick(60)
             if evento.type == pygame.QUIT:
                 running = False
 
-#inicio parte do codigo referente a projetil do chefão
+        dt = relogio.tick(60)
+        if abelha.inimigo_ativo:
+            abelha.movimento() # Se a abelha tiver movimento próprio
+            abelha.animacao.atualiza(dt)
+
+        if boss.inimigo_ativo:
+            boss.movimento() # Definir posteriormente como é o movimento do boss
+            boss.animacao.atualiza(dt)
+        poo.movimento()
+        
+        if leitao.pos_x is not None and poo.pos_x is not None:
+            if leitao and abs(poo.pos_x - leitao.pos_x)<20: #20 pixels de distancia entre leitão e player
+                leitao.comentario()
+
+
+#inicio parte do codigo referente a projetil do chefão#
         tempo_atual = pygame.time.get_ticks()
         if tempo_atual - ultimo_disparo_boss > INTERVALO_DISPARO:
             novo_proj = boss.dispara_projetil(poo) 
             if novo_proj:
                 projeteis_ativos.append(novo_proj)
                 ultimo_disparo_boss = tempo_atual
-            projeteis_a_remover = []
+        projeteis_a_remover = []
         for proj in projeteis_ativos:
             if proj.ativo:
                 proj.atualizar(poo, frontground._largura)
-        if not proj.ativo:
-            projeteis_a_remover.append(proj)
+                tela.blit(proj.sprite, (proj.pos_x, proj.pos_y))
+            else:
+                projeteis_a_remover.append(proj)
 
         for proj_removido in projeteis_a_remover:
             projeteis_ativos.remove(proj_removido)
 #fim da parte do codigo referente a projetil do chefão
 
-        sprite_atual = poo.animacao.pega_sprite_atual()
-        tela.blit(sprite_atual, (poo._pos_x, poo._pos_y))
+
+#inicio da parte de desenho na tela
         poo.animacao.atualiza(dt)
+        leitao.animacao.atualiza(dt)
 
-
-
-        tela.fill((0, 0, 0)) # Limpa a tela
+        tela.blit(poo.animacao.pega_sprite_atual(), (poo.pos_x, poo.pos_y))
+        tela.blit(leitao.animacao.pega_sprite_atual(), (leitao.pos_x, leitao.pos_y))
+        tela.blit(abelha.animacao.pega_sprite_atual(), (abelha.pos_x, abelha.pos_y))
+        tela.blit(boss.animacao.pega_sprite_atual(), (boss.pos_x, boss.pos_y))
         pygame.display.flip()
-        tela.fill((0, 0, 0))
-        pygame.display.flip()
-        clock.tick(60)
-        pygame.quit()
+#fim da parte de desenho na tela
 
-if "__main__" == __name__:
+    pygame.quit()
+
+if  __name__== "__main__": 
     main()
