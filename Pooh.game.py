@@ -2,8 +2,9 @@
 
 from abc import ABC, abstractmethod
 import pygame
-from Biblioteca import Projetil as Pj # IMPORTA A CLASSE PROJETIL
-from Biblioteca import Animacao as Am #Importa a classe animacao 
+from Biblioteca import projetil as Pj # IMPORTA A CLASSE PROJETIL
+from Biblioteca import Animacao as Am #Importa a classe animacao
+from Biblioteca import SaveLoadManager as Slm
 
 ALTURA_TELA = 600
 COMPRIMENTO_TELA = 800
@@ -14,6 +15,9 @@ class Jogo():
     def __init__(self, id_game):
         self._id_game = id_game # pode ser usado para recuperar logs de sessões passadas
                                 #podemos usar escrita em arquivos para isso
+                    
+    
+
 
 
 class Background(Jogo):
@@ -264,20 +268,25 @@ def main():
 #fim da parte de declaração e preenchimento de sprites
 
 #inicio da parte de declaração e preenchimento de objetos
-    poo = Player(
-    id_game=1,
-    amount_honey_coletada= 0,
-    name_character="Pooh",
-    id_character=0,
-    sprite=sprite_poo,
-    pos_x= None,    #definir quando o mapa ficar pronto
-    pos_y= None,   #definir quando o mapa ficar pronto
-    vida=10,
-    tam_x=50,   #a definir conforme a sprite
-    tam_y=70,   #a definir conforme a sprite
-    speed=5,
-    no_chao=True,
-    speed_jump=10
+    resp = int(print("Deseja utilizar o seu último save?")) #1 para sim e 0 para não
+    if resp == 1:
+        poo= Slm.carregar_jogo(save_Set = 'savegame.json')
+    
+    else:
+        poo = Player(
+        id_game=1,
+        amount_honey_coletada= 0,
+        name_character="Pooh",
+        id_character=0,
+        sprite=sprite_poo,
+        pos_x= None,    #definir quando o mapa ficar pronto
+        pos_y= None,   #definir quando o mapa ficar pronto
+        vida=10,
+        tam_x=50,   #a definir conforme a sprite
+        tam_y=70,   #a definir conforme a sprite
+        speed=5,
+        no_chao=True,
+        speed_jump=10
     )
 
     leitao = Npc(
@@ -338,6 +347,7 @@ def main():
         tela.fill((0, 0, 0))  # Limpa a tela
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
+                Slm.salvar_jogo(poo, frontground, save_Set = 'savegame.json')
                 running = False
 
         dt = relogio.tick(60)
