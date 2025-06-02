@@ -1,30 +1,30 @@
 import pygame
 import os
 
-class Animador:
+class Animacao:
     def __init__(self, sprites_info, estado_padrao="idle", velocidade_animacao=100):
         self.sprites_info = sprites_info
         self.velocidade_animacao = velocidade_animacao
         self.estado_atual = estado_padrao
-        self.current_frame_index = 0
+        self.contador_sprite_atual = 0
         self.frame_freq = 0.0 # usado para controlar o tempo entre frames
 
     def definir_estado(self, novo_estado):
         if novo_estado != self.estado_atual:
             self.estado_atual = novo_estado
-            self.contador_sprite = 0  # reinicia a animação para o novo estado
-            self.frame_freq = 0.0 
+            self.contador_sprite_atual = 0  # reinicia a animação para o novo estado
+            self.frame_freq = 0 
     def atualiza(self, dt):
         self.frame_freq += dt
         if self.frame_freq >= self.velocidade_animacao:
             self.frame_freq -= self.velocidade_animacao # subtrai para manter o excesso de tempo
             if self.sprites_info[self.estado_atual]:
-                self.contador_sprite = (self.contador_sprite + 1) % len(self.sprites_info[self.estado_atual])
+                self.contador_sprite_atual = (self.contador_sprite_atual + 1) % len(self.sprites_info[self.estado_atual])
             else:
-                self.contador_sprite = 0 # reinicia para 0 se a lista estiver vazia
+                self.contador_sprite_atual = 0 # reinicia para 0 se a lista estiver vazia
 
     def pega_sprite_atual(self):
-            return self.sprites_info[self.estado_atual][self.contador_sprite]
+            return self.sprites_info[self.estado_atual][self.contador_sprite_atual]
 
 
 def pega_sprite_na_pasta(pasta):
