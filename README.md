@@ -32,8 +32,8 @@ Uma Classe p jogo (classe Pai);
 }
 ```
 ## Participantes
-* Issaka Diaw Seye
-* Lucas Leite Lima
-* Guilherme Batalini Vilches
-* Carlos Eduardo Nascimento
-* Gabriel Henrique Dias Gochs
+* Issaka Diaw Seye 
+* Lucas Leite Lima  [@L4cto] (https://github.com/L4cTo)
+* Guilherme Batalini Vilches  [@GVilches99] (https://github.com/GVilches99)
+* Carlos Eduardo Nascimento   [@Carloncio] (https://github.com/Carloncio)
+* Gabriel Henrique Dias Gochs [@Gabrielchubs] (https://github.com/Gabrielchubs)
