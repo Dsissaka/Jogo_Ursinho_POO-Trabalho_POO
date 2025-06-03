@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 import pygame
-from Biblioteca import projetil as Pj # IMPORTA A CLASSE PROJETIL
+from Biblioteca import Projetil as Pj # IMPORTA A CLASSE PROJETIL
 from Biblioteca import Animacao as Am #Importa a classe animacao
 from Biblioteca import SaveLoadManager as Slm
 
@@ -62,7 +62,7 @@ class Honey(Background):
 
     def coleta_mel(self):
         self._amount_honey= self._amount_honey - 1
-        self.desavitar()
+        self.desativar()
 
 
 class Personagens(Jogo, ABC):
@@ -163,20 +163,7 @@ class Player(Personagens):
             self._pos_y -= self._speed
             animacao = "pooh_movimento_U_sprites.png"
             #terminar a implementação para que o poo volte para o chão
-
         self.fazer_animacao(animacao)
-
-
-    def ataque(self, outro):
-        if self.verifica_colisao(outro):
-            if self.pos_y > (outro.pos_y + (outro.tam_y/1.1)):
-                dano_ataque=3
-                outro.vida = outro.vida-dano_ataque
-                #poo mata quicando 
-                if outro.vida == 0:
-                    outro.inimigo_ativo= False
-            #talvez definir um sistema de knockback
-            #ainda definir como funcionará a chamada para computar a morte do inimigo
 
 class Inimigo(Personagens):
     def __init__(self, id_game, name_character,  id_character, sprite, pos_x, pos_y, text_box, vida, tam_x, tam_y, speed, inimigo_ativo):
@@ -185,7 +172,13 @@ class Inimigo(Personagens):
         self.text_box= text_box
         self.sprite = sprite
         self.animacao = Am(sprite)
-        self.speed= speed 
+        self.speed= speed
+        self.lim_sup = None
+        self.lim_inf = None
+        self.dir = 1 #supoe-se que a abelha ja nasce no ar
+
+        self.lim_sup = None #definir posteriormente
+        self.lim_inf = None #definir posteriormente
 
     def verifica_colisao(self, outro):
         hitbox_inimigo = pygame.Rect(self.pos_x, self.pos_y, self.tam_x, self.tam_y)
@@ -193,14 +186,18 @@ class Inimigo(Personagens):
         return hitbox_inimigo.colliderect(hitbox_outro)
 
     def movimento(self):
+        self._pos_y += self.speed * self.dir
+        if self._pos_y <= self.lim_sup:
+            self._pos_y = self.lim_sup # Garante que não passe do limite
+            self.dir = 1 # Muda para baixo
+        elif self._pos_y >= self.lim_inf:
+            self._pos_y = self.lim_inf # Garante que não passe do limite
+            self.dir = -1 # Muda para cima 
         if self._id_character == 1:
-            #movimentação cima/baixo para abelha comum
-            pass
-
-        elif self._id_character == 3:
-            #ainda definir um movimento para o boss
-            pass
-         
+            self.fazer_animacao("abelha_idle_sprites")
+        else:
+            self.fazer_animacao("boss_idle_sprites")
+                
 
     def fazer_animacao(self, tipo):
         self.animacao.definir_estado(tipo)
@@ -254,9 +251,6 @@ def main():
 
     sprite_inimigo = {
         "abelha_idle_sprites": Am.pega_sprite_na_pasta("Assets/Abelha/idle"),
-        "abelha_movimento_D_sprites": Am.pega_sprite_na_pasta("Assets/Abelha/direita"),
-        "abelha_movimento_E_sprites": Am.pega_sprite_na_pasta("Assets/Abelha/esquerda"),
-        "abelha_morte_sprites": Am.pega_sprite_na_pasta("Assets/Abelha/morte")
     }
 
     sprite_leitao = {
@@ -268,7 +262,10 @@ def main():
 #fim da parte de declaração e preenchimento de sprites
 
 #inicio da parte de declaração e preenchimento de objetos
-    resp = int(print("Deseja utilizar o seu último save?")) #1 para sim e 0 para não
+
+
+    #ainda definir como esse dialogo ocorrerá dentro da tela dojogo, e não no terminal
+    resp = int(input("Deseja utilizar o seu último save?")) #1 para sim e 0 para não
     if resp == 1:
         poo= Slm.carregar_jogo(save_Set = 'savegame.json')
     
@@ -287,6 +284,20 @@ def main():
         speed=5,
         no_chao=True,
         speed_jump=10
+    )
+        
+    frontground = Plataforma(
+        id_game=1,
+        amount_honey=10,
+        status=1,
+        id_background=None,     #a definir
+        id_plataforma= None,    #a definir
+        name_background= "mapa_original",
+        sprite_background= sprite_mapa,
+        posx_plataforma= None,  #a definir
+        posy_plataforma= None,  #a definir
+        largura= None,          #a definir
+        altura= None            #a definir
     )
 
     leitao = Npc(
@@ -325,19 +336,6 @@ def main():
         inimigo_ativo= True,
     )
 
-    frontground = Plataforma(
-        id_game=1,
-        amount_honey=10,
-        status=1,
-        id_background=None,     #a definir
-        id_plataforma= None,    #a definir
-        name_background= "mapa_original",
-        sprite_background= sprite_mapa,
-        posx_plataforma= None,  #a definir
-        posy_plataforma= None,  #a definir
-        largura= None,          #a definir
-        altura= None            #a definir
-    )
 #inicio da parte de declaração e preenchimento de objetos
 
     projeteis_ativos = []
@@ -351,27 +349,26 @@ def main():
                 running = False
 
         dt = relogio.tick(60)
+        poo.movimento()
+        poo.animacao.atualiza(dt)
+        tela.blit(frontground.sprite_background["mapa_original_sprite"], (frontground.posx_plataforma, frontground.posy_plataforma))
+
+        
         if abelha.inimigo_ativo:
-            abelha.movimento() # Se a abelha tiver movimento próprio
+            abelha.movimento()
             abelha.animacao.atualiza(dt)
 
         if boss.inimigo_ativo:
             boss.movimento() # Definir posteriormente como é o movimento do boss
             boss.animacao.atualiza(dt)
-        poo.movimento()
+            #inicio parte do codigo referente a projetil do chefão#
         
-        if leitao.pos_x is not None and poo.pos_x is not None:
-            if leitao and abs(poo.pos_x - leitao.pos_x)<20: #20 pixels de distancia entre leitão e player
-                leitao.comentario()
-
-
-#inicio parte do codigo referente a projetil do chefão#
-        tempo_atual = pygame.time.get_ticks()
-        if tempo_atual - ultimo_disparo_boss > INTERVALO_DISPARO:
-            novo_proj = boss.dispara_projetil(poo) 
-            if novo_proj:
-                projeteis_ativos.append(novo_proj)
-                ultimo_disparo_boss = tempo_atual
+            tempo_atual = pygame.time.get_ticks()
+            if tempo_atual - ultimo_disparo_boss > INTERVALO_DISPARO:
+                novo_proj = boss.dispara_projetil(poo) 
+                if novo_proj: 
+                    projeteis_ativos.append(novo_proj)
+                    ultimo_disparo_boss = tempo_atual
         projeteis_a_remover = []
         for proj in projeteis_ativos:
             if proj.ativo:
@@ -379,14 +376,15 @@ def main():
                 tela.blit(proj.sprite, (proj.pos_x, proj.pos_y))
             else:
                 projeteis_a_remover.append(proj)
-
         for proj_removido in projeteis_a_remover:
             projeteis_ativos.remove(proj_removido)
-#fim da parte do codigo referente a projetil do chefão
+        #fim da parte do codigo referente a projetil do chefão
 
+        if leitao.pos_x is not None and poo.pos_x is not None:
+            if (leitao and abs(poo.pos_x - leitao.pos_x)<20) or leitao.verifica_colisao(poo): #20 pixels de distancia entre leitão e player
+                leitao.comentario()
 
 #inicio da parte de desenho na tela
-        poo.animacao.atualiza(dt)
         leitao.animacao.atualiza(dt)
 
         tela.blit(poo.animacao.pega_sprite_atual(), (poo.pos_x, poo.pos_y))
