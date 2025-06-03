@@ -16,6 +16,7 @@ class Jogo():
         self._id_game = id_game # pode ser usado para recuperar logs de sessões passadas
                                 #podemos usar escrita em arquivos para isso
                     
+        #talvez mover "load_sprites_geral" para cá
     
 
 
@@ -112,7 +113,7 @@ class Npc(Personagens):
 
     def comentario(self):
         text_box = "Cuidado com as abelhas" #frase dita pelo npc ao haver colisão com o personagem principal
-        print(text_box)
+        print(text_box) #ainda definir como fazer isto aparecer na tela e não no terminal
 
     def fazer_animacao(self, tipo):
         self.animacao.definir_estado(tipo)
@@ -127,12 +128,13 @@ class Npc(Personagens):
         return hitbox_npc.colliderect(hitbox_outro)
     
 class Player(Personagens):
-    def __init__ (self, id_game, name_character, id_character, sprite, pos_x, pos_y, vida, tam_x, tam_y, speed, no_chao, speed_jump, amount_honey_coletada):
+    def __init__ (self, id_game, name_character, id_character, sprite, pos_x, pos_y, vida, tam_x, tam_y, speed_x, speed_y, amount_honey_coletada,):
         super().__init__(id_game, id_character, name_character, pos_x, pos_y, vida, tam_x, tam_y)
         self._amount_honey_coletada = amount_honey_coletada #quantidade de mel coletada pelo personagem
-        self._speed = speed #velocidade de movimento do personagem
-        self._no_chao = no_chao #variável para definir o contato do poo com o chão
-        self._speed_jump = speed_jump
+        self._speed_jump = -15
+        self._speed_x = speed_x
+        self._speed_y = speed_y #velocidade de movimento do personagem
+        self._no_chao = True #variável para definir o contato do poo com o chão
         self.sprite = sprite
         self.animacao = Am(sprite)
 
@@ -146,29 +148,34 @@ class Player(Personagens):
         self.animacao.definir_estado(tipo)
 
     def movimento(self):
-        animacao = "pooh_idle_sprites.png"
+        animacao = "pooh_idle_sprites"
         tecla = pygame.key.get_pressed()
 
         if tecla[pygame.K_LEFT]:
-            self._pos_x -= self._speed
-            animacao = "pooh_movimento_E_sprites.png"
-
-
+            self._pos_x -= self._speed_x
+            animacao = "pooh_movimento_E_sprites"
         elif tecla[pygame.K_RIGHT]:
-            self._pos_x += self._speed
-            animacao = "pooh_movimento_D_sprites.png"
+            self._pos_x += self._speed_x
+            animacao = "pooh_movimento_D_sprites"
+        elif tecla[pygame.K_UP] and self._no_chao:
+            self._speed_y = self._speed_jump
+            self._no_chao = False 
+            animacao = "pooh_movimento_U_sprites"
 
+        self._speed_y += GRAVIDADE
+        self._pos_y += self._speed_y
 
-        elif tecla[pygame.K_UP]:
-            self._pos_y -= self._speed
-            animacao = "pooh_movimento_U_sprites.png"
-            #terminar a implementação para que o poo volte para o chão
+        if self._pos_y >= None:  #definir posteriormente onde vai ser o chão 
+            self._pos_y = 400
+            self._speed_y = 0
+            self._no_chao = True 
+
         self.fazer_animacao(animacao)
 
 class Inimigo(Personagens):
-    def __init__(self, id_game, name_character,  id_character, sprite, pos_x, pos_y, text_box, vida, tam_x, tam_y, speed, inimigo_ativo):
+    def __init__(self, id_game, name_character,  id_character, sprite, pos_x, pos_y, text_box, vida, tam_x, tam_y, speed):
         super().__init__(id_game, id_character,  name_character, pos_x, pos_y, vida, tam_x, tam_y)
-        self.inimigo_ativo= inimigo_ativo
+        self.inimigo_ativo= True
         self.text_box= text_box
         self.sprite = sprite
         self.animacao = Am(sprite)
@@ -225,6 +232,33 @@ class Inimigo(Personagens):
         )
         return projetil
     
+#inicio da parte de declaração e preenchimento de sprites    
+def load_sprites_geral():
+        sprite_poo = {
+        "pooh_idle_sprites": Am.pega_sprite_na_pasta("Assets/Pooh/idle"),
+        "pooh_movimento_D_sprites": Am.pega_sprite_na_pasta("Assets/Pooh/direita"),
+        "pooh_movimento_E_sprites": Am.pega_sprite_na_pasta("Assets/Pooh/esquerda"),
+        "pooh_movimento_U_sprites": Am.pega_sprite_na_pasta("Assets/Pooh/cima"),
+        "pooh_morte_poo": Am.pega_sprite_na_pasta("Assets/Pooh/morte")
+        }
+
+        sprite_boss = {
+        "boss_idle_sprites": Am.pega_sprite_na_pasta("Assets/Boss/idle")
+
+        }
+
+        sprite_inimigo = {
+        "abelha_idle_sprites": Am.pega_sprite_na_pasta("Assets/Abelha/idle"),
+        }
+
+        sprite_leitao = {
+        "npc_idle_sprites": Am.pega_sprite_na_pasta("Assets/Npc/idle")
+        }
+        sprite_mapa= {
+        "mapa_original_sprite": Am.pega_sprite_na_pasta("Assets/Mapa/mapa_original")
+        }
+        return sprite_poo, sprite_boss, sprite_inimigo, sprite_leitao, sprite_mapa
+#fim da parte de declaração e preenchimento de sprites
 
 def main():
     pygame.init()
@@ -232,38 +266,10 @@ def main():
     pygame.display.set_caption("jogo poo")
     relogio = pygame.time.Clock()
     running = True
+    sprite_poo, sprite_boss, sprite_inimigo, sprite_leitao, sprite_mapa = load_sprites_geral()
 
-#inicio da parte de declaração e preenchimento de sprites
-    sprite_poo = {
-        "pooh_idle_sprites": Am.pega_sprite_na_pasta("Assets/Pooh/idle"),
-        "pooh_movimento_D_sprites": Am.pega_sprite_na_pasta("Assets/Pooh/direita"),
-        "pooh_movimento_E_sprites": Am.pega_sprite_na_pasta("Assets/Pooh/esquerda"),
-        "pooh_movimento_U_sprites": Am.pega_sprite_na_pasta("Assets/Pooh/cima"),
-        "pooh_morte_poo": Am.pega_sprite_na_pasta("Assets/Pooh/morte")
-    }
-
-    sprite_boss = {
-    "boss_idle_sprites": Am.pega_sprite_na_pasta("Assets/Boss/idle"),
-    "boss_movimento_D_sprites": Am.pega_sprite_na_pasta("Assets/Boss/direita"),
-    "boss_movimento_E_sprites": Am.pega_sprite_na_pasta("Assets/Boss/esquerda"),
-    "boss_morte_sprites": Am.pega_sprite_na_pasta("Assets/Boss/morte"),
-    }
-
-    sprite_inimigo = {
-        "abelha_idle_sprites": Am.pega_sprite_na_pasta("Assets/Abelha/idle"),
-    }
-
-    sprite_leitao = {
-    "npc_idle_sprites": Am.pega_sprite_na_pasta("Assets/Npc/idle")
-    }
-    sprite_mapa= {
-        "mapa_original_sprite": Am.pega_sprite_na_pasta("Assets/Mapa/mapa_original")
-    }
-#fim da parte de declaração e preenchimento de sprites
 
 #inicio da parte de declaração e preenchimento de objetos
-
-
     #ainda definir como esse dialogo ocorrerá dentro da tela dojogo, e não no terminal
     resp = int(input("Deseja utilizar o seu último save?")) #1 para sim e 0 para não
     if resp == 1:
@@ -282,7 +288,6 @@ def main():
         tam_x=50,   #a definir conforme a sprite
         tam_y=70,   #a definir conforme a sprite
         speed=5,
-        no_chao=True,
         speed_jump=10
     )
         
@@ -321,7 +326,6 @@ def main():
         tam_x=None,
         tam_y= None,
         speed=10,
-        inimigo_ativo= True,
  )
 
     boss = Inimigo(
