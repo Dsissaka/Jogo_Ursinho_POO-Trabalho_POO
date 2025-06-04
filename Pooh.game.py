@@ -235,11 +235,11 @@ class Inimigo(Personagens):
 #inicio da parte de declaração e preenchimento de sprites    
 def load_sprites_geral():
         sprite_poo = {
-        "pooh_idle_sprites": Am.pega_sprite_na_pasta("Assets/Pooh/idle"),
-        "pooh_movimento_D_sprites": Am.pega_sprite_na_pasta("Assets/Pooh/direita"),
-        "pooh_movimento_E_sprites": Am.pega_sprite_na_pasta("Assets/Pooh/esquerda"),
-        "pooh_movimento_U_sprites": Am.pega_sprite_na_pasta("Assets/Pooh/cima"),
-        "pooh_morte_poo": Am.pega_sprite_na_pasta("Assets/Pooh/morte")
+        "pooh_idle_sprites": Am.pega_sprite_na_pasta("Assets/Poo/Idle"),
+        "pooh_movimento_D_sprites": Am.pega_sprite_na_pasta("Assets/Poo/Direita"),
+        "pooh_movimento_E_sprites": Am.pega_sprite_na_pasta("Assets/Poo/Esquerda"),
+        "pooh_movimento_U_sprites": Am.pega_sprite_na_pasta("Assets/Poo/Pulo"),
+        "pooh_morte_poo": Am.pega_sprite_na_pasta("Assets/Poo/Morte")
         }
 
         sprite_boss = {
@@ -252,10 +252,10 @@ def load_sprites_geral():
         }
 
         sprite_leitao = {
-        "npc_idle_sprites": Am.pega_sprite_na_pasta("Assets/Npc/idle")
+        "npc_idle_sprites": Am.pega_sprite_na_pasta("Assets/Npc")
         }
         sprite_mapa= {
-        "mapa_original_sprite": Am.pega_sprite_na_pasta("Assets/Mapa/mapa_original")
+        "mapa_original_sprite": Am.pega_sprite_na_pasta("Assets/Mapas/Mapa_original")
         }
         return sprite_poo, sprite_boss, sprite_inimigo, sprite_leitao, sprite_mapa
 #fim da parte de declaração e preenchimento de sprites
