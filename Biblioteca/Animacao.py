@@ -2,10 +2,10 @@ import pygame
 import os
 
 class Animacao:
-    def __init__(self, sprites_info, estado_padrao="idle", velocidade_animacao=100):
+    def __init__(self, sprites_info, estado_atual, velocidade_animacao):
         self.sprites_info = sprites_info
         self.velocidade_animacao = velocidade_animacao
-        self.estado_atual = estado_padrao
+        self.estado_atual = estado_atual
         self.contador_sprite_atual = 0
         self.frame_freq = 0.0 # usado para controlar o tempo entre frames
 
@@ -13,7 +13,10 @@ class Animacao:
         if novo_estado != self.estado_atual:
             self.estado_atual = novo_estado
             self.contador_sprite_atual = 0  # reinicia a animação para o novo estado
-            self.frame_freq = 0 
+            self.frame_freq = 0
+        else:
+            return 
+        
     def atualiza(self, dt):
         self.frame_freq += dt
         if self.frame_freq >= self.velocidade_animacao:
