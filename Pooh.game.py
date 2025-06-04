@@ -6,6 +6,8 @@ from Biblioteca import Projetil as Pj # IMPORTA A CLASSE PROJETIL
 from Biblioteca import Animacao as Am #Importa a classe animacao
 from Biblioteca import SaveLoadManager as Slm
 
+#para testes, to assumindo que o chão é em 100 e o topo em 400
+
 ALTURA_TELA = 600
 COMPRIMENTO_TELA = 800
 GRAVIDADE = 1
@@ -42,6 +44,7 @@ class Plataforma(Background):
         self._largura = largura #comprimento da plataforma
         self._altura = altura #altura da plataforma
 
+#ID_plamatorma = 1 para mapa original e 2 para mapa do boss
 
 
 class Honey(Background):
@@ -58,7 +61,7 @@ class Honey(Background):
 
     def verifica_colisao(self, outro):
         hitbox_mel = pygame.Rect(self.__posx_honey, self.__posy_honey, self.__tam_x, self.__tam_y)
-        hitbox_outro = pygame.Rect(outro.pos_x, outro.pos_y, outro.tam_x, outro.tam_y)
+        hitbox_outro = pygame.Rect(outro._pos_x, outro._pos_y, outro._tam_x, outro._tam_y)
         return hitbox_mel.colliderect(hitbox_outro)
 
     def coleta_mel(self):
@@ -109,7 +112,8 @@ class Npc(Personagens):
         super().__init__(id_game, id_character,  name_character, pos_x, pos_y, vida, tam_x, tam_y)
  
         self.sprite = sprite
-        self.animacao = Am(sprite)
+        self.animacao = Am.Animacao(sprite,"npc_idle_sprites", 100)
+
 
     def comentario(self):
         text_box = "Cuidado com as abelhas" #frase dita pelo npc ao haver colisão com o personagem principal
@@ -119,28 +123,28 @@ class Npc(Personagens):
         self.animacao.definir_estado(tipo)
 
     def movimento(self):
-        animacao = "npc_idle_sprites"
-        self.fazer_animacao(animacao)
+        estado = "npc_idle_sprites"
+        self.fazer_animacao(estado)
 
     def verifica_colisao(self, outro):
-        hitbox_npc = pygame.Rect(self.pos_x, self.pos_y, self.tam_x, self.tam_y)
-        hitbox_outro = pygame.Rect(outro.pos_x, outro.pos_y, outro.tam_x, outro.tam_y)
+        hitbox_npc = pygame.Rect(self._pos_x, self._pos_y, self._tam_x, self._tam_y)
+        hitbox_outro = pygame.Rect(outro._pos_x, outro._pos_y, outro._tam_x, outro._tam_y)
         return hitbox_npc.colliderect(hitbox_outro)
     
 class Player(Personagens):
     def __init__ (self, id_game, name_character, id_character, sprite, pos_x, pos_y, vida, tam_x, tam_y, speed_x, speed_y, amount_honey_coletada,):
         super().__init__(id_game, id_character, name_character, pos_x, pos_y, vida, tam_x, tam_y)
         self._amount_honey_coletada = amount_honey_coletada #quantidade de mel coletada pelo personagem
-        self._speed_jump = -15
         self._speed_x = speed_x
         self._speed_y = speed_y #velocidade de movimento do personagem
         self._no_chao = True #variável para definir o contato do poo com o chão
         self.sprite = sprite
-        self.animacao = Am(sprite)
+        self.animacao = Am.Animacao(sprite, "pooh_idle_sprites", 100)
+        self.speed_jump = -15
 
     def verifica_colisao(self, outro):
-        hitbox_player = pygame.Rect(self.pos_x, self.pos_y, self.tam_x, self.tam_y)
-        hitbox_outro = pygame.Rect(outro.pos_x, outro.pos_y, outro.tam_x, outro.tam_y)
+        hitbox_player = pygame.Rect(self._pos_x, self._pos_y, self._tam_x, self._tam_y)
+        hitbox_outro = pygame.Rect(outro._pos_x, outro._pos_y, outro._tam_x, outro._tam_y)
         return hitbox_player.colliderect(hitbox_outro)
 
 
@@ -158,14 +162,14 @@ class Player(Personagens):
             self._pos_x += self._speed_x
             animacao = "pooh_movimento_D_sprites"
         elif tecla[pygame.K_UP] and self._no_chao:
-            self._speed_y = self._speed_jump
+            self._speed_y = self.speed_jump
             self._no_chao = False 
             animacao = "pooh_movimento_U_sprites"
 
         self._speed_y += GRAVIDADE
         self._pos_y += self._speed_y
 
-        if self._pos_y >= None:  #definir posteriormente onde vai ser o chão 
+        if self._pos_y >= 401:  #definir posteriormente onde vai ser o chão 
             self._pos_y = 400
             self._speed_y = 0
             self._no_chao = True 
@@ -173,23 +177,22 @@ class Player(Personagens):
         self.fazer_animacao(animacao)
 
 class Inimigo(Personagens):
-    def __init__(self, id_game, name_character,  id_character, sprite, pos_x, pos_y, text_box, vida, tam_x, tam_y, speed):
+    def __init__(self, id_game, name_character,  id_character, sprite, pos_x, pos_y, vida, tam_x, tam_y, speed):
         super().__init__(id_game, id_character,  name_character, pos_x, pos_y, vida, tam_x, tam_y)
         self.inimigo_ativo= True
-        self.text_box= text_box
         self.sprite = sprite
-        self.animacao = Am(sprite)
+        self.animacao = Am.Animacao(sprite)
         self.speed= speed
-        self.lim_sup = None
-        self.lim_inf = None
+        self.lim_sup = 400
+        self.lim_inf = 100
         self.dir = 1 #supoe-se que a abelha ja nasce no ar
 
-        self.lim_sup = None #definir posteriormente
-        self.lim_inf = None #definir posteriormente
+        self.lim_sup = 400 #definir posteriormente
+        self.lim_inf = 100 #definir posteriormente
 
     def verifica_colisao(self, outro):
-        hitbox_inimigo = pygame.Rect(self.pos_x, self.pos_y, self.tam_x, self.tam_y)
-        hitbox_outro = pygame.Rect(outro.pos_x, outro.pos_y, outro.tam_x, outro.tam_y)
+        hitbox_inimigo = pygame.Rect(self._pos_x, self._pos_y, self._tam_x, self._tam_y)
+        hitbox_outro = pygame.Rect(outro._pos_x, outro._pos_y, outro._tam_x, outro._tam_y)
         return hitbox_inimigo.colliderect(hitbox_outro)
 
     def movimento(self):
@@ -212,18 +215,18 @@ class Inimigo(Personagens):
     
     def dispara_projetil(self, outro):
         velocidade = 10   # definir posteriormente
-        direcao = -1 if self.pos_x > outro.pos_x else 1
+        direcao = -1 if self._pos_x > outro._pos_x else 1
         distancia_disparo = 10 #distancia minima para o inimigo atirar contra poo
                                #definir posteriormente
         proj_ativo =True    
-        largura_proj = 10 # definir posteriormente
-        altura_proj = 10  # definir posteriormente
+        largura_proj = 5 # definir posteriormente
+        altura_proj = 2  # definir posteriormente
         sprite_proj = Am.pega_sprite_na_pasta("Assets/Projetil/bala.png")
-        if abs(self.pos_x - outro.pos_x) <= distancia_disparo :
+        if abs(self._pos_x - outro._pos_x) <= distancia_disparo :
                 projetil = Pj(
                     velocidade_projetil= velocidade,
-                    pos_x_projetil=self.pos_x, #por estar na classe inimigo, o puxam-se os dados de posicao e assim o ferrao parte da posicao do inimigo
-                    pos_y_projetil=self.pos_y, #por estar na classe inimigo, o puxam-se os dados de posicao e assim o ferrao parte da posicao do inimigo
+                    pos_x_projetil=self._pos_x, #por estar na classe inimigo, o puxam-se os dados de posicao e assim o ferrao parte da posicao do inimigo
+                    pos_y_projetil=self._pos_y, #por estar na classe inimigo, o puxam-se os dados de posicao e assim o ferrao parte da posicao do inimigo
                     direcao= direcao,
                     ativo = proj_ativo,
                     largura_proj = largura_proj,
@@ -282,27 +285,27 @@ def main():
         name_character="Pooh",
         id_character=0,
         sprite=sprite_poo,
-        pos_x= None,    #definir quando o mapa ficar pronto
-        pos_y= None,   #definir quando o mapa ficar pronto
+        pos_x= 1,    #definir quando o mapa ficar pronto
+        pos_y= 100,   #definir quando o mapa ficar pronto
         vida=10,
         tam_x=50,   #a definir conforme a sprite
         tam_y=70,   #a definir conforme a sprite
-        speed=5,
-        speed_jump=10
+        speed_x=5,
+        speed_y=3
     )
         
     frontground = Plataforma(
         id_game=1,
         amount_honey=10,
         status=1,
-        id_background=None,     #a definir
-        id_plataforma= None,    #a definir
+        id_background=1,     #a definir
+        id_plataforma= 1,    #a definir
         name_background= "mapa_original",
         sprite_background= sprite_mapa,
-        posx_plataforma= None,  #a definir
-        posy_plataforma= None,  #a definir
-        largura= None,          #a definir
-        altura= None            #a definir
+        posx_plataforma= 400,  #a definir
+        posy_plataforma= 300,  #a definir
+        largura= 0,          #a definir
+        altura= 0            #a definir
     )
 
     leitao = Npc(
@@ -310,11 +313,11 @@ def main():
         name_character= "Leitao",
         id_character= 2,
         sprite = sprite_leitao,
-        pos_x= None,    #definir quando o mapa ficar pronto
-        pos_y= None,    #definir quando o mapa ficar pronto
+        pos_x= 50,    #definir quando o mapa ficar pronto
+        pos_y= 100,    #definir quando o mapa ficar pronto
         vida = 9999,    #npc não morre
-        tam_x= None,    #definir conforme a sprite
-        tam_y= None,    #definir conforme a sprite
+        tam_x= 30,    #definir conforme a sprite
+        tam_y= 20,    #definir conforme a sprite
     )
 
     abelha = Inimigo(
@@ -322,26 +325,27 @@ def main():
         name_character= "Abelha",
         id_character=1,
         sprite = sprite_inimigo,
+        pos_x= 300,
+        pos_y= 250,
         vida=10,
-        tam_x=None,
-        tam_y= None,
+        tam_x=30,
+        tam_y= 30,
         speed=10,
  )
-
     boss = Inimigo(
-        id_game=1,
-        name_character= "Boss",
-        id_character=3,
-        sprite = sprite_boss,
-        vida=10,
-        tam_x=None,     #a definir
-        tam_y= None,    #a definir
-        speed=10,
-        inimigo_ativo= True,
-    )
+                id_game=1,
+                name_character= "Boss",
+                id_character=3,
+                sprite = sprite_boss,
+                pos_x=300,
+                pos_y= 250,
+                vida=10,
+                tam_x=30,     #a definir
+                tam_y= 30,    #a definir
+                speed=10,
+)
 
 #inicio da parte de declaração e preenchimento de objetos
-
     projeteis_ativos = []
     ultimo_disparo_boss = pygame.time.get_ticks()
 
@@ -355,7 +359,7 @@ def main():
         dt = relogio.tick(60)
         poo.movimento()
         poo.animacao.atualiza(dt)
-        tela.blit(frontground.sprite_background["mapa_original_sprite"], (frontground.posx_plataforma, frontground.posy_plataforma))
+        tela.blit(frontground._sprite_background["mapa_original_sprite"][0], (frontground._posy_plataforma, frontground._posy_plataforma))
 
         
         if abelha.inimigo_ativo:
@@ -384,17 +388,17 @@ def main():
             projeteis_ativos.remove(proj_removido)
         #fim da parte do codigo referente a projetil do chefão
 
-        if leitao.pos_x is not None and poo.pos_x is not None:
-            if (leitao and abs(poo.pos_x - leitao.pos_x)<20) or leitao.verifica_colisao(poo): #20 pixels de distancia entre leitão e player
+        if leitao._pos_x is not None and poo._pos_x is not None:
+            if (leitao and abs(poo._pos_x - leitao._pos_x)<20) or leitao.verifica_colisao(poo): #20 pixels de distancia entre leitão e player
                 leitao.comentario()
 
 #inicio da parte de desenho na tela
         leitao.animacao.atualiza(dt)
 
-        tela.blit(poo.animacao.pega_sprite_atual(), (poo.pos_x, poo.pos_y))
-        tela.blit(leitao.animacao.pega_sprite_atual(), (leitao.pos_x, leitao.pos_y))
-        tela.blit(abelha.animacao.pega_sprite_atual(), (abelha.pos_x, abelha.pos_y))
-        tela.blit(boss.animacao.pega_sprite_atual(), (boss.pos_x, boss.pos_y))
+        tela.blit(poo.animacao.pega_sprite_atual(), (poo._pos_x, poo._pos_y))
+        tela.blit(leitao.animacao.pega_sprite_atual(), (leitao._pos_x, leitao._pos_y))
+        tela.blit(abelha.animacao.pega_sprite_atual(), (abelha._pos_x, abelha._pos_y))
+        tela.blit(boss.animacao.pega_sprite_atual(), (boss._pos_x, boss._pos_y))
         pygame.display.flip()
 #fim da parte de desenho na tela
 
