@@ -1,5 +1,3 @@
-#terminar o encapsulamento dos atributos
-
 from abc import ABC, abstractmethod
 import pygame
 from Biblioteca import Projetil as Pj # IMPORTA A CLASSE PROJETIL
@@ -19,9 +17,6 @@ class Jogo():
                                 #podemos usar escrita em arquivos para isso
                     
         #talvez mover "load_sprites_geral" para cá
-    
-
-
 
 class Background(Jogo):
     def __init__(self, id_game, amount_honey, status, id_background, name_background, sprite_background):
@@ -31,7 +26,6 @@ class Background(Jogo):
         self._amount_honey= amount_honey #quantiade de méis disponiveis pelo mapa
         self._id_background = id_background #usado para identificar possiveis variações para um mesmo cenário (ex:versão noite e versão dia)
         self._sprite_background = sprite_background
-
 
 class Plataforma(Background):
     #classe responsável pela enquadramento visivel do jogo, onde o jogador se encontra
@@ -45,8 +39,6 @@ class Plataforma(Background):
         self._altura = altura #altura da plataforma
 
 #ID_plamatorma = 1 para mapa original e 2 para mapa do boss
-
-
 class Honey(Background):
     def __init__(self, id_game, amount_honey, status, id_background, name_background, sprite_background,posx_honey, posy_honey, tam_x, tam_y, ativo):
         super().__init__(id_game, amount_honey, status, id_background, name_background, sprite_background)
@@ -70,7 +62,7 @@ class Honey(Background):
 
 
 class Personagens(Jogo, ABC):
-    def __init__(self, id_game, id_character,  name_character, pos_x, pos_y, vida, tam_x, tam_y):
+    def __init__(self, id_game, id_character,  name_character, pos_x, pos_y, vida, tam_x, tam_y, sprite):
         super().__init__(id_game)
         self._id_character= id_character #id de identificação do personagem
         self._name_character= name_character #nome do personagem
@@ -79,6 +71,7 @@ class Personagens(Jogo, ABC):
         self._vida = vida #contador de vida do personagem
         self._tam_x = tam_x #altura do personagem
         self._tam_y = tam_y # largura do personagem
+        self._sprite = sprite
 
         #ID DE PERSONAGEM
         #0 = POOH
@@ -108,8 +101,8 @@ class Personagens(Jogo, ABC):
         pass
 
 class Npc(Personagens):
-    def __init__(self, id_game, name_character, id_character, sprite, pos_x, pos_y, vida, tam_x, tam_y):
-        super().__init__(id_game, id_character,  name_character, pos_x, pos_y, vida, tam_x, tam_y)
+    def __init__(self, id_game, name_character, id_character, sprite, pos_x, pos_y, vida, tam_x, tam_y,):
+        super().__init__(id_game, id_character,  name_character, pos_x, pos_y, vida, tam_x, tam_y, sprite)
  
         self.sprite = sprite
         self.animacao = Am.Animacao(sprite,"npc_idle_sprites", 100)
@@ -133,12 +126,11 @@ class Npc(Personagens):
     
 class Player(Personagens):
     def __init__ (self, id_game, name_character, id_character, sprite, pos_x, pos_y, vida, tam_x, tam_y, speed_x, speed_y, amount_honey_coletada,):
-        super().__init__(id_game, id_character, name_character, pos_x, pos_y, vida, tam_x, tam_y)
+        super().__init__(id_game, id_character, name_character, pos_x, pos_y, vida, tam_x, tam_y, sprite)
         self._amount_honey_coletada = amount_honey_coletada #quantidade de mel coletada pelo personagem
         self._speed_x = speed_x
         self._speed_y = speed_y #velocidade de movimento do personagem
         self._no_chao = True #variável para definir o contato do poo com o chão
-        self.sprite = sprite
         self.animacao = Am.Animacao(sprite, "pooh_idle_sprites", 100)
         self.speed_jump = -15
 
@@ -178,15 +170,17 @@ class Player(Personagens):
 
 class Inimigo(Personagens):
     def __init__(self, id_game, name_character,  id_character, sprite, pos_x, pos_y, vida, tam_x, tam_y, speed):
-        super().__init__(id_game, id_character,  name_character, pos_x, pos_y, vida, tam_x, tam_y)
+        super().__init__(id_game, id_character,  name_character, pos_x, pos_y, vida, tam_x, tam_y, sprite)
         self.inimigo_ativo= True
-        self.sprite = sprite
-        self.animacao = Am.Animacao(sprite)
         self.speed= speed
         self.lim_sup = 400
         self.lim_inf = 100
         self.dir = 1 #supoe-se que a abelha ja nasce no ar
 
+        if self._id_character ==1:
+            self.animacao = Am.Animacao(sprite, "abelha_idle_sprites", 100)
+        elif self._id_character == 3:
+            self.animacao = Am.Animacao(sprite, "inimigo_idle_sprites", 100)
         self.lim_sup = 400 #definir posteriormente
         self.lim_inf = 100 #definir posteriormente
 
