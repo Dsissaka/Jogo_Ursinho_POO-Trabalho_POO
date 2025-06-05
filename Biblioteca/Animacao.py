@@ -21,14 +21,19 @@ class Animacao:
         self.frame_freq += dt
         if self.frame_freq >= self.velocidade_animacao:
             self.frame_freq -= self.velocidade_animacao # subtrai para manter o excesso de tempo
-            if self.sprites_info[self.estado_atual]:
-                self.contador_sprite_atual = (self.contador_sprite_atual + 1) % len(self.sprites_info[self.estado_atual])
+            if self.estado_atual:
+                self.contador_sprite_atual = (self.contador_sprite_atual + 1) % len(self.estado_atual)
+
             else:
                 self.contador_sprite_atual = 0 # reinicia para 0 se a lista estiver vazia
 
     def pega_sprite_atual(self):
-            return self.sprites_info[self.estado_atual][self.contador_sprite_atual]
-
+        sprites = self.sprites_info.get(self.estado_atual, [])
+        if sprites and 0 <= self.contador_sprite_atual < len(sprites):
+            return sprites[self.contador_sprite_atual]
+        else:
+            print(f"[ERRO] Sprite inválido: estado={self.estado_atual}, contador={self.contador_sprite_atual}")
+            return pygame.Surface((1, 1), pygame.SRCALPHA)
 
 def pega_sprite_na_pasta(pasta):
     sprites = []
