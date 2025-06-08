@@ -270,7 +270,7 @@ def main():
     #ainda definir como esse dialogo ocorrerá dentro da tela dojogo, e não no terminal
     resp = int(input("Deseja utilizar o seu último save?")) #1 para sim e 0 para não
     if resp == 1:
-        poo= Slm.carregar_jogo(save_Set = 'savegame.json')
+        poo, frontground= Slm.carregar_jogo(Player, Plataforma)
     
     else:
         poo = Player(
@@ -347,7 +347,7 @@ def main():
         tela.fill((0, 0, 0))  # Limpa a tela
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
-                Slm.salvar_jogo(poo, frontground, save_Set = 'savegame.json')
+                Slm.salvar_jogo(poo, frontground)
                 running = False
 
         dt = relogio.tick(60)
