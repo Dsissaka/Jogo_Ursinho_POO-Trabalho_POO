@@ -103,8 +103,6 @@ class Personagens(Jogo, ABC):
 class Npc(Personagens):
     def __init__(self, id_game, name_character, id_character, sprite, pos_x, pos_y, vida, tam_x, tam_y,):
         super().__init__(id_game, id_character,  name_character, pos_x, pos_y, vida, tam_x, tam_y, sprite)
- 
-        self.sprite = sprite
         self.animacao = Am.Animacao(sprite,"npc_idle_sprites", 100)
 
 
@@ -215,7 +213,7 @@ class Inimigo(Personagens):
         proj_ativo =True    
         largura_proj = 5 # definir posteriormente
         altura_proj = 2  # definir posteriormente
-        sprite_proj = Am.pega_sprite_na_pasta("Assets/Projetil/bala.png")
+        sprite_proj = Am.pega_sprite_na_pasta("Assets/Projetil")
         if abs(self._pos_x - outro._pos_x) <= distancia_disparo :
                 projetil = Pj(
                     velocidade_projetil= velocidade,
