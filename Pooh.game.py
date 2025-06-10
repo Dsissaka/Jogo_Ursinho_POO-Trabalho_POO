@@ -18,8 +18,34 @@ class Jogo():
     def __init__(self, id_game):
         self._id_game = id_game # pode ser usado para recuperar logs de sessões passadas
                                 #podemos usar escrita em arquivos para isso
-                    
-        #talvez mover "load_sprites_geral" para cá
+
+    #inicio da parte de declaração e preenchimento de sprites    
+    def load_sprites_geral(self):
+            sprite_poo = {
+            "pooh_idle_sprites": Am.pega_sprite_na_pasta("Assets/Poo/Idle"),
+            "pooh_movimento_D_sprites": Am.pega_sprite_na_pasta("Assets/Poo/Direita"),
+            "pooh_movimento_E_sprites": Am.pega_sprite_na_pasta("Assets/Poo/Esquerda"),
+            "pooh_movimento_U_sprites": Am.pega_sprite_na_pasta("Assets/Poo/Pulo"),
+            "pooh_morte_poo": Am.pega_sprite_na_pasta("Assets/Poo/Morte")
+            }
+
+            sprite_boss = {
+            "boss_idle_sprites": Am.pega_sprite_na_pasta("Assets/Boss/idle")
+
+            }
+
+            sprite_inimigo = {
+            "abelha_idle_sprites": Am.pega_sprite_na_pasta("Assets/Abelha/idle"),
+            }
+
+            sprite_leitao = {
+            "npc_idle_sprites": Am.pega_sprite_na_pasta("Assets/Npc")
+            }
+            sprite_mapa= {
+            "mapa_original_sprite": Am.pega_sprite_na_pasta("Assets/Mapas/Mapa_original")
+            }
+            return sprite_poo, sprite_boss, sprite_inimigo, sprite_leitao, sprite_mapa
+    #fim da parte de declaração e preenchimento de sprites
 
 class Background(Jogo):
     def __init__(self, id_game, amount_honey, status, id_background, name_background, sprite_background):
@@ -237,16 +263,22 @@ class gerenciaSave:
     def salvar_jogo(self, player, plataforma, versao=1):
         try:
             data = {
-                'vida': player.vida,
-                'amount_honey_coletada': player.amount_honey_coletada,
-                'sprite_player': player.sprite,
-                'size_x': player.tam_x,
-                'size_y': player.tam_y,
-                    #Cenario
+                'id_G': player._id_game,
+                'amount_honey_coletada': player._amount_honey_coletada,
+                'name_C': player._name_character,
+                'id_C': player._id_character,
+                'sprite_path_player': 'Assets/Poo/Idle',
+                'position_x': player._pos_x,
+                'position_y': player._pos_y,
+                'life': player._vida,
+                'size_x': player._tam_x,
+                'size_y': player._tam_y,
+                'spd_x': player._speed_x,
+                'spd_y': player._speed_y,
                 'current_scene': plataforma.name_background,
                 'current_scene_id': plataforma.id_background,
-                'current_scene_sprite': plataforma.sprite_background,
-                'amount_honey_map': plataforma.amount_honey
+                'amount_honey_map': plataforma.amount_honey,
+                'versao': versao
                 }
             with open(self.arquivo_save, 'w') as arquivo:
                 json.dump(data, arquivo)
@@ -254,7 +286,7 @@ class gerenciaSave:
         except Exception as e:
             print(f"Erro ao salvar o jogo: {e}")
 
-    def carregar_jogo(self, PlayerClass, PlataformaClass):
+    def carregar_jogo(self, PlayerClass, PlataformaClass, sprite_poo, sprite_mapa):
         if not os.path.exists(self.arquivo_save):
             print("Arquivo de save não encontrado.")
             return None, None
@@ -268,19 +300,35 @@ class gerenciaSave:
                 return None, None
 
             player = PlayerClass(
-                amount_honey_coletada=data['amount_honey_coletada'],
-                vida=data['vida'],
-                sprite=data['sprite_player'],
+                id_game=data['id_G'],
+                name_character=data['name_C'],
+                id_character=data['id_C'],
+                sprite=sprite_poo,
+                pos_x=data['position_x'],
+                pos_y=data['position_y'],
+                vida=data['life'],
                 tam_x=data['size_x'],
-                tam_y=data['size_y']
+                tam_y=data['size_y'],
+                speed_x=data['spd_x'],
+                speed_y=data['spd_y'],
+                amount_honey_coletada=data['amount_honey_coletada']
             )
 
+
             plataforma = PlataformaClass(
-                name_background=data['current_scene'],
+                id_game=1,
+                amount_honey=data['amount_honey_map'],
+                status=1,
                 id_background=data['current_scene_id'],
-                sprite_background=data['current_scene_sprite'],
-                amount_honey=data['amount_honey_map']
+                id_plataforma=1,
+                name_background=data['current_scene'],
+                sprite_background=sprite_mapa,
+                posx_plataforma=400,
+                posy_plataforma=300,
+                largura=0,
+                altura=0
             )
+
 
             print("Jogo carregado com êxito!")
             return player, plataforma
@@ -289,33 +337,6 @@ class gerenciaSave:
             print(f"Erro ao carregar o jogo: {e}")
             return None, None
             
-#inicio da parte de declaração e preenchimento de sprites    
-def load_sprites_geral():
-        sprite_poo = {
-        "pooh_idle_sprites": Am.pega_sprite_na_pasta("Assets/Poo/Idle"),
-        "pooh_movimento_D_sprites": Am.pega_sprite_na_pasta("Assets/Poo/Direita"),
-        "pooh_movimento_E_sprites": Am.pega_sprite_na_pasta("Assets/Poo/Esquerda"),
-        "pooh_movimento_U_sprites": Am.pega_sprite_na_pasta("Assets/Poo/Pulo"),
-        "pooh_morte_poo": Am.pega_sprite_na_pasta("Assets/Poo/Morte")
-        }
-
-        sprite_boss = {
-        "boss_idle_sprites": Am.pega_sprite_na_pasta("Assets/Boss/idle")
-
-        }
-
-        sprite_inimigo = {
-        "abelha_idle_sprites": Am.pega_sprite_na_pasta("Assets/Abelha/idle"),
-        }
-
-        sprite_leitao = {
-        "npc_idle_sprites": Am.pega_sprite_na_pasta("Assets/Npc")
-        }
-        sprite_mapa= {
-        "mapa_original_sprite": Am.pega_sprite_na_pasta("Assets/Mapas/Mapa_original")
-        }
-        return sprite_poo, sprite_boss, sprite_inimigo, sprite_leitao, sprite_mapa
-#fim da parte de declaração e preenchimento de sprites
 
 def main():
     pygame.init()
@@ -323,14 +344,17 @@ def main():
     pygame.display.set_caption("jogo poo")
     relogio = pygame.time.Clock()
     running = True
-    sprite_poo, sprite_boss, sprite_inimigo, sprite_leitao, sprite_mapa = load_sprites_geral()
+    Jogo_poo = Jogo(id_game=1)
+    sprite_poo, sprite_boss, sprite_inimigo, sprite_leitao, sprite_mapa = Jogo_poo.load_sprites_geral()
+    
 
 
 #inicio da parte de declaração e preenchimento de objetos
     #ainda definir como esse dialogo ocorrerá dentro da tela dojogo, e não no terminal
     resp = int(input("Deseja utilizar o seu último save?")) #1 para sim e 0 para não
     if resp == 1:
-        poo, frontground= Slm.carregar_jogo(Player, Plataforma)
+        Slm = gerenciaSave()
+        poo, frontground = Slm.carregar_jogo(Player, Plataforma, sprite_poo, sprite_mapa)
     
     else:
         poo = Player(
