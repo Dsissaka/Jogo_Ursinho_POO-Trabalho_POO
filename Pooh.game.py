@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
 import pygame
+import json
+import os
 from Biblioteca import Projetil as Pj # IMPORTA A CLASSE PROJETIL
 from Biblioteca import Animacao as Am #Importa a classe animacao
 from Biblioteca import SaveLoadManager as Slm
+
 
 #para testes, to assumindo que o chão é em 100 e o topo em 400
 
@@ -227,6 +230,65 @@ class Inimigo(Personagens):
         )
         return projetil
     
+class gerenciaSave:
+    def __init__(self, arquivo_save='savegame.json'):
+        self.arquivo_save = arquivo_save
+
+    def salvar_jogo(self, player, plataforma, versao=1):
+        try:
+            data = {
+                'vida': player.vida,
+                'amount_honey_coletada': player.amount_honey_coletada,
+                'sprite_player': player.sprite,
+                'size_x': player.tam_x,
+                'size_y': player.tam_y,
+                    #Cenario
+                'current_scene': plataforma.name_background,
+                'current_scene_id': plataforma.id_background,
+                'current_scene_sprite': plataforma.sprite_background,
+                'amount_honey_map': plataforma.amount_honey
+                }
+            with open(self.arquivo_save, 'w') as arquivo:
+                json.dump(data, arquivo)
+            print("Jogo salvo com êxito!")
+        except Exception as e:
+            print(f"Erro ao salvar o jogo: {e}")
+
+    def carregar_jogo(self, PlayerClass, PlataformaClass):
+        if not os.path.exists(self.arquivo_save):
+            print("Arquivo de save não encontrado.")
+            return None, None
+
+        try:
+            with open(self.arquivo_save, 'r') as arquivo:
+                data = json.load(arquivo)
+
+            if data.get('versao') != 1:
+                print("Versão de save incompatível.")
+                return None, None
+
+            player = PlayerClass(
+                amount_honey_coletada=data['amount_honey_coletada'],
+                vida=data['vida'],
+                sprite=data['sprite_player'],
+                tam_x=data['size_x'],
+                tam_y=data['size_y']
+            )
+
+            plataforma = PlataformaClass(
+                name_background=data['current_scene'],
+                id_background=data['current_scene_id'],
+                sprite_background=data['current_scene_sprite'],
+                amount_honey=data['amount_honey_map']
+            )
+
+            print("Jogo carregado com êxito!")
+            return player, plataforma
+
+        except Exception as e:
+            print(f"Erro ao carregar o jogo: {e}")
+            return None, None
+            
 #inicio da parte de declaração e preenchimento de sprites    
 def load_sprites_geral():
         sprite_poo = {
