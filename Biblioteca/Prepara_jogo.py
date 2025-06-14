@@ -1,6 +1,5 @@
 import pygame as py
 from Biblioteca import Animacao as Am #Importa a classe animacao
-from Biblioteca import saveLoadManager as Slm
 
 class Jogo():
     def __init__(self, id_game):
@@ -47,6 +46,7 @@ class Jogo():
             sprite_projetil = {
             "projetil": Am.pega_sprite_na_pasta("Assets/Ferrao")
             }
-            return  sprite_inimigo_urso, sprite_poo,  sprite_leitao, sprite_honey,  sprite_mapa, sprite_projetil, sprite_boss, sprite_inimigo_abelha,
+            return  sprite_inimigo_urso, sprite_poo,  sprite_leitao, sprite_honey,  sprite_mapa, sprite_projetil, sprite_boss, sprite_inimigo_abelha
     #fim da parte de declaração e preenchimento de sprites
 
+#jogar o codigo para chamada do gerenciamento de save aqui 
