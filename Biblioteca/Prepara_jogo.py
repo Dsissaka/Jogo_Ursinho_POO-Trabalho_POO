@@ -11,7 +11,8 @@ class Jogo():
             
             sprite_inimigo_urso = {
             "urso_movimento_D_sprites": Am.pega_sprite_na_pasta("Assets/Urso/Direita"),
-            "urso_movimento_E_sprites": Am.pega_sprite_na_pasta("Assets/Urso/Esquerda")
+            "urso_movimento_E_sprites": Am.pega_sprite_na_pasta("Assets/Urso/Esquerda"),
+            "urso_dile_sprites": Am.pega_sprite_na_pasta("Assets/Urso/Idle")
             }
 
             sprite_poo = {
