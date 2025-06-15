@@ -5,9 +5,9 @@ from Biblioteca import Animacao as Am #Importa a classe animacao
 from Biblioteca import saveLoadManager as Slm
 from Biblioteca import Prepara_jogo as Pg
 
-ALTURA_TELA = 600
-COMPRIMENTO_TELA = 800
-INTERVALO_DISPARO = 3000 # 1.5 segundos
+ALTURA_TELA = 480
+COMPRIMENTO_TELA = 840
+INTERVALO_DISPARO = 1000 # 1.5 segundos
 
 
 class Plataform(pygame.sprite.Sprite):
@@ -29,7 +29,7 @@ class Honey(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
         
-    def update(self):
+    def update(self, plataforms_group):
         self.image = self.animacao.pega_sprite_atual()
 
 class Personagens(pygame.sprite.Sprite, ABC):
@@ -85,53 +85,70 @@ class Npc(Personagens):
     def fazer_animacao(self, tipo):
         self.animacao.definir_estado(tipo)
 
-    def update(self):
+    def update(self, plataforms_group):
         #a
         pass
 
 class Player(Personagens):
     def __init__ (self, id_character, name_character,  sprite, pos_x, pos_y, tam_x, tam_y, speed_x, speed_y):
         super().__init__(id_character, name_character,   sprite, pos_x, pos_y, tam_x, tam_y,)
+        
         #criando imagem do player
         self.animacao = Am.Animacao(sprite, "pooh_idle_sprites", 100)
         self.image = self.animacao.pega_sprite_atual()
         self.rect = self.image.get_rect()
         #fim
+
         self._speed_x = speed_x
         #variaveis para fisica
         self._speed_y = speed_y #velocidade de movimento do personagem
         self._no_chao = False #variável para definir o contato do poo com o chão
-        self.gravidade = 0.8
-        self.speed_jump = -18
+        self.gravidade = 0.5
+        self.forca_pulo = -14
         self.vida = 3
-
         #fim
+
         self.invincible = False
         self.invinciblity_duration = 1500 # duração em milissegundos(1.5s)
         self.hurt_time = 0
-        self.knockback_strength = 40
+        self.knockback_strength = 20
 
     def fazer_animacao(self, tipo):
         self.animacao.definir_estado(tipo)
 
-    def update(self):
+    def update(self, plataforms_group):
+        if self.invincible:
+            current_time = pygame.time.get_ticks()
+            self.image.set_alpha(128 if (current_time // 100) % 2 == 0 else 255) # efeito de piscar
+
+            if current_time - self.hurt_time > self.invinciblity_duration:
+                self.invincible = False
+                self.image.set_alpha(255) # garante que o player volte normal 
+        
         animacao = "pooh_idle_sprites"
         tecla = pygame.key.get_pressed()
+        if not self.invincible:
+            if tecla[pygame.K_a]:
+                self._pos_x -= self._speed_x
+                animacao = "pooh_movimento_E_sprites"
 
-        if tecla[pygame.K_a]:
-            self._pos_x -= self._speed_x
-            animacao = "pooh_movimento_E_sprites"
+            if tecla[pygame.K_d]:
+                self._pos_x += self._speed_x
+                animacao = "pooh_movimento_D_sprites"
 
-        if tecla[pygame.K_d]:
-            self._pos_x += self._speed_x
-            animacao = "pooh_movimento_D_sprites"
-
-        if tecla[pygame.K_w] and self._no_chao:
-            self._speed_y = self.speed_jump
-            self._no_chao = False 
+            if tecla[pygame.K_w] and self._no_chao:
+                self._speed_y = self.forca_pulo
+                self._no_chao = False 
+        # Pulo (só se não estiver em knockback e estiver no chão)
+        if not self.invincible and tecla[pygame.K_w] and self.on_ground:
+            self.velocity_y = self.forca_pulo
+            self.on_ground = False # Importante para evitar pulo duplo
+            jump_sound.play()
 
         self._speed_y += self.gravidade
         self._pos_y += self._speed_y
+        # Assume que o jogador está no ar até que uma colisão prove o contrário
+        self.on_ground = False
 
         if self._pos_y >= 440:  #definir posteriormente onde vai ser o chão 
             self._pos_y = 440
@@ -149,27 +166,28 @@ class Player(Personagens):
             # A função retorna uma lista de plataformas com as quais colidimos
             hits = pygame.sprite.spritecollide(self, plataforms_group, False)
             if hits:
-                # Se colidiu, pega a primeira plataforma da lista (hits[0])
-                # e ajusta a posição do jogador para ficar em cima dela.
-                self.rect.bottom = hits[0].rect.top
-                self._speed_y = 0
-                self._no_chao = True
-        if self.invincible:
-            current_time = pygame.time.get_ticks()
-            self.image.set_alpha(100 if (current_time // 100) % 2 == 0 else 255) # efeito de piscar
-
-            if current_time - self.hurt_time > self.invinciblity_duration:
-                self.invincible = False
-                self.image.set_alpha(255) # garante que o player volte normal 
-
+                # Encontra a plataforma mais alta com que colidiu
+                closest_platform = hits[0]
+                for hit in hits:
+                    if hit.rect.top < closest_platform.rect.top:
+                        closest_platform = hit
+                
+                # Para em cima da plataforma se os pés estiverem abaixo do topo dela
+                if self.rect.bottom > closest_platform.rect.top:
+                    self.rect.bottom = closest_platform.rect.top
+                    self.velocity_y = 0
+                    self.on_ground = True
+        
+        # Limites do mundo para o jogador
+        if self.rect.left < 0:
+            self.rect.left = 0
+        if self.rect.right > level_width:
+            self.rect.right = level_width
+        
 class Inimigo(Personagens):
-    def __init__(self, id_character, name_character,  sprite, pos_x, pos_y, tam_x, tam_y):
+    def __init__(self, id_character, name_character,  sprite, pos_x, pos_y, tam_x, tam_y, patrol_start, patrol_end):
         super().__init__( id_character, name_character, sprite, pos_x, pos_y, tam_x, tam_y)
-        self.inimigo_ativo= True
-        self.lim_sup = 400
-        self.lim_inf = 100
-        self.dir = 1 #supoe-se que a abelha ja nasce no ar
-
+       
         if self._id_character ==2:
             self.animacao = Am.Animacao(sprite, "abelha_idle_sprites", 100)
             self.speed_x = 0
@@ -180,80 +198,152 @@ class Inimigo(Personagens):
             self.speed_x = 2
             self.speed_y = 0
 
-        elif self._id_character == 4:
-            self.animacao = Am.Animacao(sprite, "boss_idle_sprites", 100)
-            #definir o movimento x e y do boss
         
         self.image = self.animacao.pega_sprite_atual()
         self.rect = self.image.get_rect()
         self.rect.x = self._pos_x
         self.rect.y = self._pos_y
+        self.patrol_start = patrol_start
+        self.patrol_end = patrol_end
+
 
     def fazer_animacao(self, tipo):
         self.animacao.definir_estado(tipo)
 
-    def update(self):
+    def update(self, plataforms_group):
          # Movimento Horizontal para o Urso
-        if self._id_character == 2:
+        if self._id_character == 3:
             self.rect.x += self.speed_x
-            animacao = "urso_movimento_D_sprites"
-
-            # Inverte a direção se atingir as bordas da tela
-            if self.rect.right > 840 or self.rect.left < 0:
+            animacao = "abelha_idle_sprites"
+            if self.rect.right > self.patrol_end or self.rect.left < self.patrol_start:
                 self.speed_x *= -1
                 animacao = "urso_movimento_E_sprites"
         
         # Movimento Vertical para a Abelha
-        elif self._id_character == 3:
+        elif self._id_character == 2:
             self.rect.y += self.speed_y
             animacao = "abelha_idle_sprites"
             # Inverte a direção se atingir o topo ou a base da área de jogo
             if self.rect.bottom > 440 or self.rect.top < 0: # 440 é o nosso chão
                 self.speed_y *= -1
 
-        elif self._id_character ==4:
-            #terminar a parte do boss
-            pass
         self.fazer_animacao(animacao)
     
-    def dispara_projetil(self, outro, sprite_projetil):
-        velocidade = 10   # definir posteriormente
-        direcao = -1 if self._pos_x > outro._pos_x else 1
-        distancia_disparo = 10 #distancia minima para o inimigo atirar contra poo
-                               #definir posteriormente
-        proj_ativo =True    
-        largura_proj = 5 # definir posteriormente
-        altura_proj = 2  # definir posteriormente
-        sprite_proj = sprite_projetil
-        if abs(self._pos_x - outro._pos_x) <= distancia_disparo :
-                projetil = Pj(
-                    velocidade_projetil= velocidade,
-                    pos_x_projetil=self._pos_x, #por estar na classe inimigo, o puxam-se os dados de posicao e assim o ferrao parte da posicao do inimigo
-                    pos_y_projetil=self._pos_y, #por estar na classe inimigo, o puxam-se os dados de posicao e assim o ferrao parte da posicao do inimigo
-                    direcao= direcao,
-                    ativo = proj_ativo,
-                    largura_proj = largura_proj,
-                    altura_proj = altura_proj,
-                    sprite = sprite_proj
-        )
-        return projetil
-    
+class Stinger(pygame.sprite.Sprite):
+    def __init__(self, x, y, sprite):
+        super().__init__()
+        self.animacao = Am.Animacao(sprite, "Projetil", 100)
+        self.image = self.animacao.pega_sprite_atual()
+        self.rect = self.image.get_rect(center=(x,y))
+        self.speed_y = 7.5
+
+    def update(self, *args):
+        self.rect.y += self.speed_y
+        if self.rect.top > ALTURA_TELA:
+            self.kill()
+
+class Boss(pygame.sprite.Sprite):
+    def __init__(self,  sprite):
+        super().__init__()
+        self.health = 100
+        self.animacao = Am.Animacao (sprite, "boss_idle_sprites", 100)
+        self.image = self.animacao.pega_sprite_atual()
+        self.rect = self.image.get_rect(center=(COMPRIMENTO_TELA / 2, 80))
+        self.speed_x = 4
+        self.last_shot_time = pygame.time.get_ticks()
+
+    def update(self, all_sprites_group, stingers_group):
+        self.rect.x += self.speed_x
+        if self.rect.right > COMPRIMENTO_TELA or self.rect.left < 0:
+            self.speed_x *= -1
+
+        now = pygame.time.get_ticks()
+        if now - self.last_shot_time > INTERVALO_DISPARO:
+            self.last_shot_time = now
+            stinger = Stinger(self.rect.centerx, self.rect.bottom)
+            all_sprites_group.add(stinger)
+            stingers_group.add(stinger)  
+
+class Water(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.Surface([10, 10])
+        self.image.fill((0,150,255))
+        self.rect = self.image.get_rect(center=(x, y))
+        self.speed_y = -12
+
+    def update(self, *args):
+        self.rect.y += self.speed_y
+        if self.rect.bottom < 0:
+            self.kill()
 
 
 pygame.init()
-
 # criando uma fonte para o placar
 game_font = pygame.font.Font(None, 36) # fonte padrão, tam.36
-display = pygame.display.set_mode([COMPRIMENTO_TELA, ALTURA_TELA])
+display = pygame.display.set_mode(([COMPRIMENTO_TELA, ALTURA_TELA]), pygame.FULLSCREEN)
 pygame.display.set_caption('Ursinho POO')
 clock = pygame.time.Clock()
-# --- Criação dos Objetos e Grupos ---
-Game = Pg.Jogo(1)
+
+#definição das musicas
+level1_music_path = 'Assets/Sons/fase1.mp3'
+pygame.mixer.music.load('Assets/Sons/fase1.mp3')
+pygame.mixer.music.set_volume(0.4)
+jump_sound = pygame.mixer.Sound('Assets/Sons/jump.wav')
+collect_sound = pygame.mixer.Sound('Assets/Sons/mel.wav')
+hurt_sound = pygame.mixer.Sound('Assets/Sons/hit.wav')
+boss_music = 'Assets/Sons/boss.mp3'
+#fim
+
+Game = Pg.Jogo(1) #alterar esta linha ao implementar o save
 sprite_inimigo_urso, sprite_poo, sprite_leitao, sprite_honey, sprite_boss, sprite_inimigo_abelha, sprite_mapa, sprite_projetil = Game.load_sprites_geral()
-ground_rect = pygame.Rect(0, 440, 840, 40)
-all_sprites = pygame.sprite.Group(); plataforms_group = pygame.sprite.Group()
-honey_group = pygame.sprite.Group(); enemies_group = pygame.sprite.Group()
-honey_score = 0; player = Player(
+level_width = 3000
+platform_map = [
+    [0, 440, level_width, 40], [200, 350, 150, 20], [450, 280, 200, 20], 
+    [700, 360, 100, 20], [900, 250, 150, 20], [1150, 180, 120, 20], 
+    [1400, 300, 180, 20], [1650, 220, 100, 20], [1900, 150, 100, 20], 
+    [2200, 280, 150, 20], [2500, 350, 100, 20]
+]
+honey_map = [
+    [250, 325], [500, 255], [950, 225], [1200, 155], [1450, 275], 
+    [1700, 195], [1950, 125], [2250, 255], [2550, 325], [2800, 350]
+]
+enemy_map = [
+    # Urso 1
+    [3, "Urso", sprite_inimigo_urso, 600, 440 - 50, 35, 50, 550, 800],
+    # Urso 2
+    [3, "Urso", sprite_inimigo_urso, 1000, 250 - 50, 35, 50, 950, 1100],
+    # Urso 3
+    [3, "Urso", sprite_inimigo_urso, 1500, 300 - 50, 35, 50, 1450, 1600],
+    # Abelha 1
+    [2, "Abelha", sprite_inimigo_abelha, 800, 200, 30, 25, 0, 0], # Note: patrol_start e patrol_end para abelhas geralmente definem o limite do movimento vertical
+    # Abelha 2
+    [2, "Abelha", sprite_inimigo_abelha, 1800, 180, 30, 25, 0, 0],
+    # Abelha 3
+    [2, "Abelha", sprite_inimigo_abelha, 2400, 250, 30, 25, 0, 0]
+]
+
+game_sprites_assets = {
+    'sprite_inimigo_urso': sprite_inimigo_urso,
+    'sprite_poo': sprite_poo,
+    'sprite_leitao': sprite_leitao,
+    'sprite_honey': sprite_honey,
+    'sprite_boss': sprite_boss,
+    'sprite_inimigo_abelha': sprite_inimigo_abelha,
+    'sprite_mapa': sprite_mapa,
+    'sprite_projetil': sprite_projetil
+}
+
+
+all_sprites = pygame.sprite.Group()
+plataforms_group = pygame.sprite.Group()
+honey_group = pygame.sprite.Group()
+enemies_group = pygame.sprite.Group()
+boss_group = pygame.sprite.Group()
+stingers_group = pygame.sprite.Group()
+water_group = pygame.sprite.Group()
+
+player = Player(
     id_character=0,
     name_character="Pooh",
     sprite=sprite_poo,
@@ -263,118 +353,201 @@ honey_score = 0; player = Player(
     tam_y=60,
     speed_x=5,
     speed_y=0
-); all_sprites.add(player)
+    )
+hose_rect = None
 
-# Cria o urso
-enemy1 = Inimigo(
-        id_character= 3,
-        name_character= "Urso",
-        sprite = sprite_inimigo_urso,
-        pos_x= 300,
-        pos_y= 390,
-        tam_x=35,
-        tam_y= 50)
-all_sprites.add(enemy1); enemies_group.add(enemy1)
-
-# Cria a abelha
-bee1 = Inimigo(
-        id_character= 2,
-        name_character= "Abelha",
-        sprite = sprite_inimigo_abelha,
-        pos_x= 300,
-        pos_y= 390,
-        tam_x=30,
-        tam_y= 25)
-all_sprites.add(bee1); enemies_group.add(bee1)
+def draw_multiline_text(surface, text, font, color, rect):
+    lines = text.splitlines()
+    y = rect.y
+    for line in lines:
+        line_surface = font.render(line, True, color)
+        surface.blit(line_surface, (rect.x, y))
+        y += font.get_linesize()
 
 leitao = Npc(
         id_character= 2,
         name_character= "Leitao",
         sprite = sprite_leitao,
-        pos_x= 50,    #definir quando o mapa ficar pronto
-        pos_y= 100,    #definir quando o mapa ficar pronto
-        tam_x= 30,    #definir conforme a sprite
-        tam_y= 20,    #definir conforme a sprite
+        pos_x= 100,    #definir quando o mapa ficar pronto
+        pos_y= 300,    #definir quando o mapa ficar pronto
+        tam_x= 8,    #definir conforme a sprite
+        tam_y= 5,    #definir conforme a sprite
     )
 all_sprites.add(leitao)
 
-for data in [[200, 350, 150, 20], [450, 280, 200, 20], [150, 180, 100, 20]]:
-    plat = Plataform(*data); all_sprites.add(plat); plataforms_group.add(plat)
-total_honey = len([[250, 325], [500, 255], [180, 155]])
-for data in [[250, 325], [500, 255], [180, 155]]:
-    honey = Honey(*data,sprite_honey); all_sprites.add(honey); honey_group.add(honey)
+game_state = 'intro'
+honey_score = 0
+total_honey = Game.setup_level(all_sprites, plataforms_group, honey_group, enemies_group,
+    boss_group, stingers_group, water_group, player,
+    platform_map, honey_map, enemy_map, game_sprites_assets, Plataform, Honey, Inimigo)
+boss_level_setup_done = False
+camera_x = 0
+camera_smoothing = 0.05
 
+pygame.mixer.music.play(loops=-1)
 
-# Criando as plataformas:
-plat1 = Plataform(x=200, y=350, w=150, h=20)
-plat2 = Plataform(x=450, y=280, w=200, h=20)
-plat3 = Plataform(x=150, y=180, w=100, h=20)
-
-# Adicionando as plataformas aos grupos
-all_sprites.add(plat1, plat2, plat3)
-plataforms_group.add(plat1, plat2, plat3)
-
-#criando alguns potes de mel
-honey1 = Honey(250, 325, sprite_honey) # Em cima da plat1
-honey2 = Honey(500, 255, sprite_honey) # Em cima da plat2
-honey3 = Honey(180, 155, sprite_honey) # Em cima da plat3
-
-all_sprites.add(honey1, honey2, honey3)
-honey_group.add(honey1, honey2, honey3)
-
-honey_score = 0 # variável para contar o mel
-
-# --- Loop Principal ---
 gameLoop = True
 if __name__ == '__main__':
     while gameLoop:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 gameLoop = False
+            if game_state == 'intro' and event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    game_state = 'level_1'
+            if game_state == 'game_over' and event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    honey_score = 0
+                    game_state = 'level_1'
+                    total_honey = Game.setup_level(all_sprites, plataforms_group, honey_group, enemies_group,
+                        boss_group, stingers_group, water_group, player,
+                        platform_map, honey_map, enemy_map, game_sprites_assets, Plataform, Honey, Inimigo)
+                    boss_level_setup_done = False
+                    pygame.mixer.music.load(level1_music_path)
+                    pygame.mixer.music.play(loops=-1)
+        keys = pygame.key.get_pressed()
+
+         # --- LÓGICA DE ESTADOS ---
         
-        # --- Lógica ---
-        # o .update() chama a função update de TODOS os sprites no grupo
-        all_sprites.update()
+        if game_state == 'intro':
+            display.fill((93, 226, 231))
+            for sprite in all_sprites:
+                screen_rect = sprite.rect.copy()
+                screen_rect.x -= int(camera_x)
+                display.blit(sprite.image, screen_rect)
+            
+            health_text = game_font.render(f'Vida: {player.vida}', True, (255, 255, 255))
+            display.blit(health_text, (10, 10))
+            honey_text = game_font.render(f'Mel: {honey_score}/{total_honey}', True, (255, 255, 255))
+            display.blit(honey_text, (10, 40))
 
-        honey_collected = pygame.sprite.spritecollide(player, honey_group, True)# O 'True' no final faz com que o mel atingido seja removido de todos os grupos
-        if honey_collected:
-            print("Mel coletado!")# No futuro, aqui aumentaremos um placar
-            honey_score += 1 #incrementaçao do mel
-        if not player.invincible:
-             enemy_hits = pygame.sprite.spritecollide(player, enemies_group, False)# verifica a colisão do player com o inimigo, o False serve para que o inimigo nao suma depois
-             if enemy_hits:
-                player.invincible = True
-                player.hurt_time = pygame.time.get_ticks()
-                player.vida -= 1
-                print(f'Atingido! vidas restanntes:{player.vida}')
-                enemy = enemy_hits[0]
-                if player.rect.centerx < enemy.rect.centerx: player.rect.x -= player.knockback_strength
-                else: player.rect.x += player.knockback_strength
-                player._speed_y = -8 # Impulso para cima
+            smoke_overlay = pygame.Surface((COMPRIMENTO_TELA, ALTURA_TELA), pygame.SRCALPHA)
+            smoke_overlay.fill((0, 0, 0, 180))
+            display.blit(smoke_overlay, (0, 0))
 
-        # verificação de GAME OVERdd
-        if player.vida <= 0:
-            print('GAME OVER!')
-            gameLoop = False # Jogo encerra
+            npc_rect = pygame.Rect(100, 380 - 80, 50, 80)
+            pygame.draw.rect(display, (255, 100, 100), npc_rect)
+            
+            dialog_rect = pygame.Rect(200, 280, 680, 150)
+            pygame.draw.rect(display, (50, 50, 50), dialog_rect)
+            pygame.draw.rect(display, (255, 255, 255), dialog_rect, 3)
+            
+            instructions = ("Bem-vindo, Jogador!\nUse A/D para mover, W para pular.\nColete todo o mel para lutar contra a Abelha Rainha!\nAperte E para acionar a mangueira.\nPressione ESPAÇO para começar.")
+            draw_multiline_text(display, instructions, game_font, (255, 255, 255), dialog_rect.inflate(-20, -20))
 
+        elif game_state == 'level_1':
+            
+            all_sprites.update(plataforms_group)
+            
+            if pygame.sprite.spritecollide(player, honey_group, True):
+                honey_score += 1
+                collect_sound.play()
+            
+            if not player.invincible:
+                enemy_hits = pygame.sprite.spritecollide(player, enemies_group, False)
+                if enemy_hits:
+                    enemy = enemy_hits[0]
+                    player.invincible = True
+                    player.hurt_time = pygame.time.get_ticks()
+                    player.vida -= 1
+                    hurt_sound.play()
+                    print(f'Atingido! Vidas restantes: {player.vida}')
+                    if player.rect.centerx < enemy.rect.centerx:
+                        player.rect.x -= player.knockback_strength
+                    else:
+                        player.rect.x += player.knockback_strength
+                    player.velocity_y = -8
+            
+            target_camera_x = player.rect.centerx - (COMPRIMENTO_TELA / 2)
+            camera_x += (target_camera_x - camera_x) * camera_smoothing
+            if camera_x < 0:
+                camera_x = 0
+            if camera_x > level_width - COMPRIMENTO_TELA:
+                camera_x = level_width - COMPRIMENTO_TELA
+            
+            if honey_score >= total_honey:
+                game_state = 'boss_level'
+                pygame.mixer.music.load(boss_music) # Carrega a nova música
+                pygame.mixer.music.play(loops=-1)
+            if player.vida <= 0:
+                game_state = 'game_over'
+            
+            display.fill((93, 226, 231))
+            for sprite in all_sprites:
+                screen_rect = sprite.rect.copy()
+                screen_rect.x -= int(camera_x)
+                display.blit(sprite.image, screen_rect)
+            
+            health_text = game_font.render(f'Vida: {player.vida}', True, (255, 255, 255))
+            display.blit(health_text, (10, 10))
+            honey_text = game_font.render(f'Mel: {honey_score}/{total_honey}', True, (255, 255, 255))
+            display.blit(honey_text, (10, 40))
 
-        # --- Desenho ---
-        display.fill((93, 226, 231))
-        pygame.draw.rect(display, (34, 139, 34), ground_rect) # Desenha o chão verde
-        # o .draw() desenha TODOS os sprites do grupo na tela
-        all_sprites.draw(display)
+        elif game_state == 'boss_level':
+            if not boss_level_setup_done:
+                Game.setup_boss_level(all_sprites, plataforms_group,honey_group, enemies_group, stingers_group, water_group, boss_group, player, sprite_boss)
+                boss_level_setup_done = True
+            
+           
+            
+            if keys[pygame.K_e] and player.rect.colliderect(hose_rect):
+                water = Water(hose_rect.centerx, hose_rect.top)
+                all_sprites.add(water)
+                water_group.add(water)
+            
+            player.update(plataforms_group)
+            boss_group.update(all_sprites, stingers_group)
+            stingers_group.update()
+            water_group.update()
+            
+            if not player.invincible:
+                stinger_hits = pygame.sprite.spritecollide(player, stingers_group, True)
+                if stinger_hits:
+                    player.invincible = True
+                    player.hurt_time = pygame.time.get_ticks()
+                    player.vida -= 1
+                    hurt_sound.play()
+                    print(f'Atingido por um ferrão!')
+                    player.velocity_y = -8
+            
+            boss_hit_dict = pygame.sprite.groupcollide(water_group, boss_group, True, False)
+            if boss_hit_dict:
+                boss = list(boss_hit_dict.values())[0][0]
+                boss.health -= 1
+                print(f"Chefe atingido! Vida restante: {boss.health}")
+            
+            if player.vida <= 0:
+                game_state = 'game_over'
+            if len(boss_group) > 0 and list(boss_group)[0].health <= 0:
+                game_state = 'you_win'
+            
+            display.fill((50, 0, 0))
+            ground_boss = pygame.Rect(0, 440, COMPRIMENTO_TELA, 40)
+            pygame.draw.rect(display, (34, 139, 34), ground_boss)
+            pygame.draw.rect(display, (100, 100, 100), hose_rect)
+            all_sprites.draw(display)
+            
+            health_text = game_font.render(f'Vida: {player.vida}', True, (255, 255, 255))
+            display.blit(health_text, (10, 10))
+            if len(boss_group) > 0:
+                boss_health_text = game_font.render(f'Vida Chefe: {list(boss_group)[0].health}', True, (255, 255, 0))
+                display.blit(boss_health_text, (600, 10))
         
-        health_text = game_font.render(f'Vida:{player.vida}', True, (255,255,255))
-        display.blit(health_text, (10,10)) # posicao no canto superior esquerdo
-
-        honey_text = game_font.render(f'Mel: {honey_score}', True,(255,255,255))
-        display.blit(honey_text, (10,40))
-
-        if player.verifica_colisao(leitao):
-            leitao.comentario(display)
-
-
-
+        elif game_state == 'game_over' or game_state == 'you_win':
+            if game_state == 'game_over':
+                display.fill((0, 0, 0))
+                go_text = game_font.render("GAME OVER", True, (255, 0, 0))
+                go_rect = go_text.get_rect(center=(COMPRIMENTO_TELA/2, ALTURA_TELA/2 - 20))
+                display.blit(go_text, go_rect)
+                restart_text = game_font.render("Pressione R para reiniciar", True, (255, 255, 255))
+                restart_rect = restart_text.get_rect(center=(COMPRIMENTO_TELA/2, ALTURA_TELA/2 + 20))
+                display.blit(restart_text, restart_rect)
+            else: # you_win
+                display.fill((255, 255, 255))
+                win_text = game_font.render("VOCE VENCEU!", True, (0, 200, 0))
+                win_rect = win_text.get_rect(center=(COMPRIMENTO_TELA/2, ALTURA_TELA/2))
+                display.blit(win_text, win_rect)
+        
         pygame.display.update()
         clock.tick(60)
 
