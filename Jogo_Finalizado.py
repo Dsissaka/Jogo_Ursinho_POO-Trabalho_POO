@@ -196,13 +196,13 @@ display = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCRE
 pygame.display.set_caption('Ursinho POO')
 clock = pygame.time.Clock()
 pygame.mixer.init()
-level1_music_path = 'Audio/fase1.mp3'
-pygame.mixer.music.load('Audio/fase1.mp3')
+level1_music_path = 'Assets/Sons/fase1.mp3'
+pygame.mixer.music.load('Assets/Sons/fase1.mp3')
 pygame.mixer.music.set_volume(0.4)
-jump_sound = pygame.mixer.Sound('Audio/jump.wav')
-collect_sound = pygame.mixer.Sound('Audio/mel.wav')
-hurt_sound = pygame.mixer.Sound('Audio/hit.wav')
-boss_music = 'Audio/boss.mp3'
+jump_sound = pygame.mixer.Sound('Assets/Sons/jump.wav')
+collect_sound = pygame.mixer.Sound('Assets/Sons/mel.wav')
+hurt_sound = pygame.mixer.Sound('Assets/Sons/hit.wav')
+boss_music = 'Assets/Sons/boss.mp3'
 
 # --- 3. DEFINIÇÃO DO MAPA DO NÍVEL ---
 level_width = 3000
