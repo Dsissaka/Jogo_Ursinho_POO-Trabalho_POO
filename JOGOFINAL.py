@@ -34,6 +34,7 @@ class Honey(pygame.sprite.Sprite):
 
 class Personagens(pygame.sprite.Sprite, ABC):
     def __init__(self, id_character,  name_character,  sprite, pos_x, pos_y, tam_x, tam_y):
+        super().__init__()
         self._id_character= id_character #id de identificação do personagem
         self._name_character= name_character #nome do personagem
         self._pos_x = pos_x #posicao no eixo X do personagem em relação ao mapa
@@ -62,7 +63,7 @@ class Personagens(pygame.sprite.Sprite, ABC):
 
 
     @abstractmethod
-    def movimento(self):
+    def update(self):
         # possui implementações diferenes para cada personagem.
         # Inimigo possui implimentação de forma randômica ou a vir pra cima do personagem (a definir)
         # Player possui movimentação baseada nas entradas do teclado
@@ -72,6 +73,8 @@ class Npc(Personagens):
     def __init__(self,  id_character, name_character, sprite, pos_x, pos_y, tam_x, tam_y,):
         super().__init__( id_character,  name_character, sprite, pos_x, pos_y, tam_x, tam_y)
         self.animacao = Am.Animacao(sprite,"npc_idle_sprites", 100)
+        self.image = self.animacao.pega_sprite_atual()
+        self.rect = self.image.get_rect()
 
     def comentario(self, surface):
         fonte = pygame.font.Font(None, 24)
@@ -81,6 +84,10 @@ class Npc(Personagens):
 
     def fazer_animacao(self, tipo):
         self.animacao.definir_estado(tipo)
+
+    def update(self):
+        #a
+        pass
 
 class Player(Personagens):
     def __init__ (self, id_character, name_character,  sprite, pos_x, pos_y, tam_x, tam_y, speed_x, speed_y):
@@ -107,7 +114,7 @@ class Player(Personagens):
     def fazer_animacao(self, tipo):
         self.animacao.definir_estado(tipo)
 
-    def update(self, plataforms_group):
+    def update(self):
         animacao = "pooh_idle_sprites"
         tecla = pygame.key.get_pressed()
 
@@ -156,8 +163,8 @@ class Player(Personagens):
                 self.image.set_alpha(255) # garante que o player volte normal 
 
 class Inimigo(Personagens):
-    def __init__(self, id_character, name_character,  sprite, pos_x, pos_y, vida, tam_x, tam_y):
-        super().__init__( id_character, name_character, sprite, pos_x, pos_y, vida, tam_x, tam_y,)
+    def __init__(self, id_character, name_character,  sprite, pos_x, pos_y, tam_x, tam_y):
+        super().__init__( id_character, name_character, sprite, pos_x, pos_y, tam_x, tam_y)
         self.inimigo_ativo= True
         self.lim_sup = 400
         self.lim_inf = 100
@@ -265,7 +272,6 @@ enemy1 = Inimigo(
         sprite = sprite_inimigo_urso,
         pos_x= 300,
         pos_y= 390,
-        vida=10, #adaptar posteriormente
         tam_x=35,
         tam_y= 50)
 all_sprites.add(enemy1); enemies_group.add(enemy1)
@@ -277,7 +283,6 @@ bee1 = Inimigo(
         sprite = sprite_inimigo_abelha,
         pos_x= 300,
         pos_y= 390,
-        vida=10, #adaptar posteriormente
         tam_x=30,
         tam_y= 25)
 all_sprites.add(bee1); enemies_group.add(bee1)
@@ -288,7 +293,6 @@ leitao = Npc(
         sprite = sprite_leitao,
         pos_x= 50,    #definir quando o mapa ficar pronto
         pos_y= 100,    #definir quando o mapa ficar pronto
-        vida = 9999,    #npc não morre
         tam_x= 30,    #definir conforme a sprite
         tam_y= 20,    #definir conforme a sprite
     )
@@ -298,7 +302,7 @@ for data in [[200, 350, 150, 20], [450, 280, 200, 20], [150, 180, 100, 20]]:
     plat = Plataform(*data); all_sprites.add(plat); plataforms_group.add(plat)
 total_honey = len([[250, 325], [500, 255], [180, 155]])
 for data in [[250, 325], [500, 255], [180, 155]]:
-    honey = Honey(*data); all_sprites.add(honey); honey_group.add(honey)
+    honey = Honey(*data,sprite_honey); all_sprites.add(honey); honey_group.add(honey)
 
 
 # Criando as plataformas:
@@ -330,7 +334,7 @@ if __name__ == '__main__':
         
         # --- Lógica ---
         # o .update() chama a função update de TODOS os sprites no grupo
-        all_sprites.update(plataforms_group)
+        all_sprites.update()
 
         honey_collected = pygame.sprite.spritecollide(player, honey_group, True)# O 'True' no final faz com que o mel atingido seja removido de todos os grupos
         if honey_collected:
