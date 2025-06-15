@@ -1,4 +1,5 @@
 import pygame
+import Biblioteca.saveLoadManager as saveLoadManager
 
 # --- 1. DEFINIÇÃO DAS CLASSES ---
 
@@ -230,6 +231,7 @@ enemies_group = pygame.sprite.Group()
 boss_group = pygame.sprite.Group()
 stingers_group = pygame.sprite.Group()
 water_group = pygame.sprite.Group()
+Slm = saveLoadManager.gerenciaSave("Assets/Meus_saves/save_1.json")
 
 player = Player()
 hose_rect = None
@@ -312,9 +314,16 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 gameLoop = False
+                Slm.salvar_jogo(player,honey_score,game_state)
             if game_state == 'intro' and event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     game_state = 'level_1'
+                if event.key == pygame.K_c:
+                    sucesso, honey_score = Slm.carregar_jogo(player)
+                    if sucesso:
+                        print("Dados carregados corretamente.")
+                    else:
+                        print("Falha ao carregar os dados.")
             if game_state == 'game_over' and event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
                     honey_score = 0

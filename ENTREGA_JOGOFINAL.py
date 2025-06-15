@@ -403,9 +403,13 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 gameLoop = False
+                Slm.salvar_jogo(player,honey_score,game_state)
             if game_state == 'intro' and event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     game_state = 'level_1'
+            if game_state == 'intro' and event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_c:
+                    player, honey_score, game_state = Slm.carregar_jogo(Player)
             if game_state == 'game_over' and event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
                     honey_score = 0
@@ -440,7 +444,7 @@ if __name__ == '__main__':
             pygame.draw.rect(display, (50, 50, 50), dialog_rect)
             pygame.draw.rect(display, (255, 255, 255), dialog_rect, 3)
             
-            instructions = ("Bem-vindo, Jogador!\nUse A/D para mover, W para pular.\nColete todo o mel para lutar contra a Abelha Rainha!\nAperte E para acionar a mangueira.\nPressione ESPAÇO para começar.")
+            instructions = ("Bem-vindo, Jogador!\nUse A/D para mover, W para pular.\nColete todo o mel para lutar contra a Abelha Rainha!\nAperte E para acionar a mangueira.\nPressione C para carregar dados salvos\nPressione ESPAÇO para começar.")
             draw_multiline_text(display, instructions, game_font, (255, 255, 255), dialog_rect.inflate(-20, -20))
 
         elif game_state == 'level_1':
