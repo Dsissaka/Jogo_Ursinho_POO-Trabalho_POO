@@ -26,8 +26,8 @@ class Honey(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(x=x,y=y)
  
     def update(self, dt):
-        self.animacao.atualiza(dt)
-        self.image = self.animacao.pega_sprite_atual()
+        #a
+        pass
 
 class Personagens(pygame.sprite.Sprite, ABC):
     def __init__(self, id_character,  name_character,  sprite, pos_x, pos_y, tam_x, tam_y):
@@ -170,7 +170,7 @@ class Player(Personagens):
                 if self.rect.bottom > closest_platform.rect.top:
                     self.rect.bottom = closest_platform.rect.top
                     self._pos_y = self.rect.y
-                    self.speed_y = 0
+                    self._speed_y = 0
                     self._no_chao = True
         
         # Limites do mundo para o jogador
@@ -211,7 +211,7 @@ class Inimigo(Personagens):
          # Movimento Horizontal para o Urso
         if self._id_character == 3:
             self.rect.x += self.speed_x
-            animacao = "abelha_idle_sprites"
+            animacao = "urso_movimento_D_sprites"
             if self.rect.right > self.patrol_end or self.rect.left < self.patrol_start:
                 self.speed_x *= -1
                 animacao = "urso_movimento_E_sprites"
@@ -224,9 +224,8 @@ class Inimigo(Personagens):
             if self.rect.bottom > 440 or self.rect.top < 0: # 440 é o nosso chão
                 self.speed_y *= -1
 
-        self.animacao.atualiza(dt)
         self.fazer_animacao(animacao)
-        self.image= self.animacao.pega_sprite_atual()
+        self.animacao.atualiza(dt)
         self._pos_x = self.rect.x 
         self._pos_y = self.rect.y
 
