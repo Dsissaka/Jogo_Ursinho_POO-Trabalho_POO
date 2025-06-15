@@ -27,7 +27,7 @@ class Jogo():
             }
 
             sprite_honey = {
-                 "honey_sprites": Am.pega_sprite_na_pasta("Assets/Honey")
+                 "honey_sprites": Am.pega_sprite_na_pasta("Assets/Mel")
             }
 
             sprite_boss = {
