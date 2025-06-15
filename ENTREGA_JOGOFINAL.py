@@ -16,20 +16,17 @@ class Plataform(pygame.sprite.Sprite):
         self.image = pygame.Surface([w,h]) #criando a plataforma
         self.image.fill([139, 69, 19])# as cores dela
         #criando o hitbox dela:
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
+        self.rect = self.image.get_rect(x=x,y=y)
 
 class Honey(pygame.sprite.Sprite):
     def __init__(self, x, y, sprite):
         super().__init__()
         self.animacao = Am.Animacao(sprite, "honey_sprites", 100)
         self.image = self.animacao.pega_sprite_atual()
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        
-    def update(self, plataforms_group):
+        self.rect = self.image.get_rect(x=x,y=y)
+ 
+    def update(self, dt):
+        self.animacao.atualiza(dt)
         self.image = self.animacao.pega_sprite_atual()
 
 class Personagens(pygame.sprite.Sprite, ABC):
@@ -63,7 +60,7 @@ class Personagens(pygame.sprite.Sprite, ABC):
 
 
     @abstractmethod
-    def update(self):
+    def update(self, dt):
         # possui implementações diferenes para cada personagem.
         # Inimigo possui implimentação de forma randômica ou a vir pra cima do personagem (a definir)
         # Player possui movimentação baseada nas entradas do teclado
@@ -85,9 +82,9 @@ class Npc(Personagens):
     def fazer_animacao(self, tipo):
         self.animacao.definir_estado(tipo)
 
-    def update(self, plataforms_group):
-        #a
-        pass
+    def update(self, dt):
+        self.animacao.atualiza(dt)
+        self.image = self.animacao.pega_sprite_atual()
 
 class Player(Personagens):
     def __init__ (self, id_character, name_character,  sprite, pos_x, pos_y, tam_x, tam_y, speed_x, speed_y):
@@ -116,7 +113,7 @@ class Player(Personagens):
     def fazer_animacao(self, tipo):
         self.animacao.definir_estado(tipo)
 
-    def update(self, plataforms_group):
+    def update(self, plataforms_group, level_width, jump_sound, dt):
         if self.invincible:
             current_time = pygame.time.get_ticks()
             self.image.set_alpha(128 if (current_time // 100) % 2 == 0 else 255) # efeito de piscar
@@ -132,36 +129,33 @@ class Player(Personagens):
                 self._pos_x -= self._speed_x
                 animacao = "pooh_movimento_E_sprites"
 
-            if tecla[pygame.K_d]:
+            elif tecla[pygame.K_d]:
                 self._pos_x += self._speed_x
                 animacao = "pooh_movimento_D_sprites"
 
             if tecla[pygame.K_w] and self._no_chao:
                 self._speed_y = self.forca_pulo
                 self._no_chao = False 
-        # Pulo (só se não estiver em knockback e estiver no chão)
-        if not self.invincible and tecla[pygame.K_w] and self.on_ground:
-            self.velocity_y = self.forca_pulo
-            self.on_ground = False # Importante para evitar pulo duplo
-            jump_sound.play()
+                jump_sound.play()
 
         self._speed_y += self.gravidade
         self._pos_y += self._speed_y
-        # Assume que o jogador está no ar até que uma colisão prove o contrário
-        self.on_ground = False
+        self._no_chao = False
 
         if self._pos_y >= 440:  #definir posteriormente onde vai ser o chão 
             self._pos_y = 440
             self._speed_y = 0
             self._no_chao = True 
 
+        self.animacao.atualiza(dt)
         self.fazer_animacao(animacao)
+        self.image = self.animacao.pega_sprite_atual()
         self.rect.x = self._pos_x
         self.rect.y = self._pos_y
 
 
         # Detecção com Plataformas:
-        # Verifique se o jogador está caindo (velocidade positiva)
+        # Verifica se o jogador está caindo (velocidade positiva)
         if self._speed_y > 0:
             # A função retorna uma lista de plataformas com as quais colidimos
             hits = pygame.sprite.spritecollide(self, plataforms_group, False)
@@ -175,14 +169,17 @@ class Player(Personagens):
                 # Para em cima da plataforma se os pés estiverem abaixo do topo dela
                 if self.rect.bottom > closest_platform.rect.top:
                     self.rect.bottom = closest_platform.rect.top
-                    self.velocity_y = 0
-                    self.on_ground = True
+                    self._pos_y = self.rect.y
+                    self.speed_y = 0
+                    self._no_chao = True
         
         # Limites do mundo para o jogador
         if self.rect.left < 0:
             self.rect.left = 0
+            self._pos_x = self.rect.x
         if self.rect.right > level_width:
             self.rect.right = level_width
+            self._pos_x = self.rect.x
         
 class Inimigo(Personagens):
     def __init__(self, id_character, name_character,  sprite, pos_x, pos_y, tam_x, tam_y, patrol_start, patrol_end):
@@ -210,7 +207,7 @@ class Inimigo(Personagens):
     def fazer_animacao(self, tipo):
         self.animacao.definir_estado(tipo)
 
-    def update(self, plataforms_group):
+    def update(self, dt):
          # Movimento Horizontal para o Urso
         if self._id_character == 3:
             self.rect.x += self.speed_x
@@ -227,7 +224,12 @@ class Inimigo(Personagens):
             if self.rect.bottom > 440 or self.rect.top < 0: # 440 é o nosso chão
                 self.speed_y *= -1
 
+        self.animacao.atualiza(dt)
         self.fazer_animacao(animacao)
+        self.image= self.animacao.pega_sprite_atual()
+        self._pos_x = self.rect.x 
+        self._pos_y = self.rect.y
+
     
 class Stinger(pygame.sprite.Sprite):
     def __init__(self, x, y, sprite):
@@ -237,10 +239,12 @@ class Stinger(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(x,y))
         self.speed_y = 7.5
 
-    def update(self, *args):
+    def update(self, dt):
         self.rect.y += self.speed_y
         if self.rect.top > ALTURA_TELA:
             self.kill()
+        self.animacao.atualiza(dt)
+        self.image = self.animacao.pega_sprite_atual()
 
 class Boss(pygame.sprite.Sprite):
     def __init__(self,  sprite):
@@ -252,7 +256,7 @@ class Boss(pygame.sprite.Sprite):
         self.speed_x = 4
         self.last_shot_time = pygame.time.get_ticks()
 
-    def update(self, all_sprites_group, stingers_group):
+    def update(self, all_sprites_group, stingers_group, dt):
         self.rect.x += self.speed_x
         if self.rect.right > COMPRIMENTO_TELA or self.rect.left < 0:
             self.speed_x *= -1
@@ -262,7 +266,13 @@ class Boss(pygame.sprite.Sprite):
             self.last_shot_time = now
             stinger = Stinger(self.rect.centerx, self.rect.bottom)
             all_sprites_group.add(stinger)
-            stingers_group.add(stinger)  
+            stingers_group.add(stinger)
+
+        self.animacao.atualiza(dt) 
+        self.fazer_animacao("boss_idle_sprites") 
+        self.image = self.animacao.pega_sprite_atual()
+        self._pos_x = self.rect.x 
+        self._pos_y = self.rect.y  
 
 class Water(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -272,7 +282,7 @@ class Water(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(x, y))
         self.speed_y = -12
 
-    def update(self, *args):
+    def update(self, dt):
         self.rect.y += self.speed_y
         if self.rect.bottom < 0:
             self.kill()
@@ -373,13 +383,14 @@ leitao = Npc(
         tam_x= 8,    #definir conforme a sprite
         tam_y= 5,    #definir conforme a sprite
     )
-all_sprites.add(leitao)
 
 game_state = 'intro'
 honey_score = 0
 total_honey = Game.setup_level(all_sprites, plataforms_group, honey_group, enemies_group,
     boss_group, stingers_group, water_group, player,
     platform_map, honey_map, enemy_map, game_sprites_assets, Plataform, Honey, Inimigo)
+
+all_sprites.add(leitao)
 boss_level_setup_done = False
 camera_x = 0
 camera_smoothing = 0.05
@@ -389,6 +400,7 @@ pygame.mixer.music.play(loops=-1)
 gameLoop = True
 if __name__ == '__main__':
     while gameLoop:
+        dt = clock.get_time()
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 gameLoop = False
@@ -402,6 +414,8 @@ if __name__ == '__main__':
                     total_honey = Game.setup_level(all_sprites, plataforms_group, honey_group, enemies_group,
                         boss_group, stingers_group, water_group, player,
                         platform_map, honey_map, enemy_map, game_sprites_assets, Plataform, Honey, Inimigo)
+                    
+                    all_sprites.add(leitao)
                     boss_level_setup_done = False
                     pygame.mixer.music.load(level1_music_path)
                     pygame.mixer.music.play(loops=-1)
@@ -411,11 +425,9 @@ if __name__ == '__main__':
         
         if game_state == 'intro':
             display.fill((93, 226, 231))
-            for sprite in all_sprites:
-                screen_rect = sprite.rect.copy()
-                screen_rect.x -= int(camera_x)
-                display.blit(sprite.image, screen_rect)
-            
+            leitao.update(dt)
+            display.blit(leitao.image, leitao.rect) 
+
             health_text = game_font.render(f'Vida: {player.vida}', True, (255, 255, 255))
             display.blit(health_text, (10, 10))
             honey_text = game_font.render(f'Mel: {honey_score}/{total_honey}', True, (255, 255, 255))
@@ -424,11 +436,8 @@ if __name__ == '__main__':
             smoke_overlay = pygame.Surface((COMPRIMENTO_TELA, ALTURA_TELA), pygame.SRCALPHA)
             smoke_overlay.fill((0, 0, 0, 180))
             display.blit(smoke_overlay, (0, 0))
-
-            npc_rect = pygame.Rect(100, 380 - 80, 50, 80)
-            pygame.draw.rect(display, (255, 100, 100), npc_rect)
             
-            dialog_rect = pygame.Rect(200, 280, 680, 150)
+            dialog_rect = pygame.Rect(50, ALTURA_TELA/2, 75, COMPRIMENTO_TELA)
             pygame.draw.rect(display, (50, 50, 50), dialog_rect)
             pygame.draw.rect(display, (255, 255, 255), dialog_rect, 3)
             
@@ -436,8 +445,15 @@ if __name__ == '__main__':
             draw_multiline_text(display, instructions, game_font, (255, 255, 255), dialog_rect.inflate(-20, -20))
 
         elif game_state == 'level_1':
+            player.update(plataforms_group, level_width, jump_sound, dt)
             
-            all_sprites.update(plataforms_group)
+            for enemy in enemies_group:
+                enemy.animacao.atualiza(dt)
+
+
+            for honey_pot in honey_group:
+                honey_pot.animacao.atualiza(dt)
+            leitao.update(dt)
             
             if pygame.sprite.spritecollide(player, honey_group, True):
                 honey_score += 1
@@ -456,7 +472,7 @@ if __name__ == '__main__':
                         player.rect.x -= player.knockback_strength
                     else:
                         player.rect.x += player.knockback_strength
-                    player.velocity_y = -8
+                    player._speed_y = -8
             
             target_camera_x = player.rect.centerx - (COMPRIMENTO_TELA / 2)
             camera_x += (target_camera_x - camera_x) * camera_smoothing
@@ -485,9 +501,23 @@ if __name__ == '__main__':
 
         elif game_state == 'boss_level':
             if not boss_level_setup_done:
-                Game.setup_boss_level(all_sprites, plataforms_group,honey_group, enemies_group, stingers_group, water_group, boss_group, player, sprite_boss)
+                boss = Game.setup_boss_level(all_sprites, plataforms_group,honey_group, enemies_group, stingers_group, water_group, boss_group, player, sprite_boss)
                 boss_level_setup_done = True
+            dt = clock.get_time()
+            player.update(plataforms_group, COMPRIMENTO_TELA, jump_sound, dt) 
             
+            for boss_sprite in boss_group:
+                boss_sprite.animacao.atualiza(dt)
+            boss_group.update(all_sprites, stingers_group, sprite_projetil, dt) 
+            
+
+            for stinger in stingers_group:
+                stinger.animacao.atualiza(dt) # Se Stinger usa Animacao
+            stingers_group.update(dt)
+
+            for water_splash in water_group:
+                pass #agua não tem animação no seu código, só se move
+            water_group.update(dt)
            
             
             if keys[pygame.K_e] and player.rect.colliderect(hose_rect):
@@ -495,11 +525,17 @@ if __name__ == '__main__':
                 all_sprites.add(water)
                 water_group.add(water)
             
-            player.update(plataforms_group)
-            boss_group.update(all_sprites, stingers_group)
-            stingers_group.update()
-            water_group.update()
+            player.update(plataforms_group, dt)
             
+            for boss_sprite in boss_group:
+                 boss_sprite.update(all_sprites, stingers_group, game_sprites_assets['sprite_projetil'], dt)
+            
+            for stinger in stingers_group:
+                stinger.update(dt)
+
+            for water_splash in water_group:
+                water_splash.update(dt)
+
             if not player.invincible:
                 stinger_hits = pygame.sprite.spritecollide(player, stingers_group, True)
                 if stinger_hits:
@@ -508,7 +544,7 @@ if __name__ == '__main__':
                     player.vida -= 1
                     hurt_sound.play()
                     print(f'Atingido por um ferrão!')
-                    player.velocity_y = -8
+                    player._speed_y = -8
             
             boss_hit_dict = pygame.sprite.groupcollide(water_group, boss_group, True, False)
             if boss_hit_dict:
@@ -526,7 +562,6 @@ if __name__ == '__main__':
             pygame.draw.rect(display, (34, 139, 34), ground_boss)
             pygame.draw.rect(display, (100, 100, 100), hose_rect)
             all_sprites.draw(display)
-            
             health_text = game_font.render(f'Vida: {player.vida}', True, (255, 255, 255))
             display.blit(health_text, (10, 10))
             if len(boss_group) > 0:
