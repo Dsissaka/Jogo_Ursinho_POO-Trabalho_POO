@@ -1,5 +1,4 @@
-from Biblioteca import Animacao as Am 
-from Biblioteca import saveLoadManager as Slm 
+from Biblioteca import Animacao as Am  
 
 ALTURA_TELA = 840
 COMPRIMENTO_TELA = 480
