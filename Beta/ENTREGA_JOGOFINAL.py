@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 import pygame
 from Biblioteca import Projetil as Pj # IMPORTA A CLASSE PROJETIL
 from Biblioteca import Animacao as Am #Importa a classe animacao
-from Biblioteca import saveLoadManager as Slm
 from Biblioteca import Prepara_jogo as Pg
 
 ALTURA_TELA = 480
@@ -403,13 +402,9 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 gameLoop = False
-                Slm.salvar_jogo(player,honey_score,game_state)
             if game_state == 'intro' and event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     game_state = 'level_1'
-            if game_state == 'intro' and event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_c:
-                    player, honey_score, game_state = Slm.carregar_jogo(Player)
             if game_state == 'game_over' and event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
                     honey_score = 0
