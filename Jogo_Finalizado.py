@@ -142,11 +142,13 @@ class Enemy(pygame.sprite.Sprite):
         self._velocidade_animacao = 0.1
         self._contador_frame = 0
 
+
         if self._enemy_type == 'bear':
             try:
                 _sprites_originais = [pygame.image.load(f"Assets/Urso/urso_{i}.png").convert_alpha() for i in [1, 2]]
-                self._sprites_direita = [pygame.transform.scale(img, (87, 45)) for img in _sprites_originais]
-                self._sprites_esquerda = [pygame.transform.flip(img, True, False) for img in self._sprites_direita]
+                self._sprites_esquerda = [pygame.transform.scale(img, (87, 45)) for img in _sprites_originais]
+                self._sprites_direita = [pygame.transform.flip(img, True, False) for img in self._sprites_esquerda]
+                
             except pygame.error as e:
                 print(f"Erro ao carregar sprites do urso: {e}")
                 _fallback_surf = pygame.Surface([70, 50]); _fallback_surf.fill((88, 41, 0))
@@ -202,8 +204,9 @@ class Boss(pygame.sprite.Sprite):
         
         try:
             _sprites_originais = [pygame.image.load(f"Assets/Boss/abelha_rainha_{i}.png").convert_alpha() for i in [1, 2]]
-            self._sprites_direita = [pygame.transform.scale(img, (120, 100)) for img in _sprites_originais]
-            self._sprites_esquerda = [pygame.transform.flip(img, True, False) for img in self._sprites_direita]
+            self._sprites_esquerda = [pygame.transform.scale(img, (120, 100)) for img in _sprites_originais]
+            self._sprites_direita = [pygame.transform.flip(img, True, False) for img in self._sprites_esquerda]
+
         except pygame.error as e:
             print(f"Erro ao carregar sprites do Boss: {e}")
             _fallback_surf = pygame.Surface([120, 100]); _fallback_surf.fill((255, 200, 0))
