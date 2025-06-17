@@ -1,6 +1,5 @@
 import pygame
 
-
 # --- 1. DEFINIÇÃO DAS CLASSES ---
 
 class Player(pygame.sprite.Sprite):
@@ -8,99 +7,101 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         
         try:
-            sprites_direita_originais = [pygame.image.load(f"Assets/Poo/Direita/poo.{i}.png").convert_alpha() for i in [1, 3, 5, 7]]
-            self.sprites_direita = [pygame.transform.scale(img, (32, 78)) for img in sprites_direita_originais]
-            self.sprites_esquerda = [pygame.transform.flip(img, True, False) for img in self.sprites_direita]
+            _sprites_direita_originais = [pygame.image.load(f"Assets/Poo/Direita/poo.{i}.png").convert_alpha() for i in [1, 3, 5, 7]]
+            self._sprites_direita = [pygame.transform.scale(img, (32, 78)) for img in _sprites_direita_originais]
+            self._sprites_esquerda = [pygame.transform.flip(img, True, False) for img in self._sprites_direita]
         except pygame.error as e:
             print(f"Erro ao carregar sprites do jogador: {e}")
-            self.sprites_direita = [pygame.Surface([40, 60]) for _ in range(4)]
-            for surf in self.sprites_direita: surf.fill((255, 165, 0))
-            self.sprites_esquerda = [pygame.transform.flip(surf, True, False) for surf in self.sprites_direita]
+            self._sprites_direita = [pygame.Surface([40, 60]) for _ in range(4)]
+            for surf in self._sprites_direita: surf.fill((255, 165, 0))
+            self._sprites_esquerda = [pygame.transform.flip(surf, True, False) for surf in self._sprites_direita]
 
-        self.indice_animacao = 0
-        self.velocidade_animacao = 0.15
-        self.contador_frame = 0
-        self.direcao = "direita"
+        self._indice_animacao = 0
+        self._velocidade_animacao = 0.15
+        self._contador_frame = 0
+        self._direcao = "direita"
         
-        self.image = self.sprites_direita[self.indice_animacao]
+        # Não sofrem encapsulamento por serem essenciais para desenho e colisao
+        self.image = self._sprites_direita[self._indice_animacao] 
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
+        #
 
         self.rect.x = 100
         self.rect.y = 300
-        self.speed = 5
-        self.velocity_y = 0
-        self.gravity = 0.5
-        self.jump_strength = -14
-        self.on_ground = False
-        self.health = 3
-        self.total_health = 3
-        self.invincible = False
-        self.invincibility_duration = 1500
-        self.hurt_time = 0
-        self.knockback_strength = 20
+        self._speed = 5
+        self._velocity_y = 0
+        self._gravity = 0.5
+        self._jump_strength = -14
+        self._on_ground = False
+        self._health = 3
+        self._total_health = 3 
+        self._invincible = False
+        self._invincibility_duration = 1500
+        self._hurt_time = 0
+        self._knockback_strength = 20
 
     def animar(self, is_moving):
         if is_moving:
-            self.contador_frame += self.velocidade_animacao
-            if self.contador_frame >= 1:
-                self.contador_frame = 0
-                self.indice_animacao = (self.indice_animacao + 1) % len(self.sprites_direita)
+            self._contador_frame += self._velocidade_animacao
+            if self._contador_frame >= 1:
+                self._contador_frame = 0
+                self._indice_animacao = (self._indice_animacao + 1) % len(self._sprites_direita)
         else:
-            self.indice_animacao = 0
+            self._indice_animacao = 0
 
-        if self.direcao == "direita":
-            self.image = self.sprites_direita[self.indice_animacao]
+        if self._direcao == "direita":
+            self.image = self._sprites_direita[self._indice_animacao]
         else:
-            self.image = self.sprites_esquerda[self.indice_animacao]
+            self.image = self._sprites_esquerda[self._indice_animacao]
         
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self, plataforms_group):
-        if self.invincible:
+        if self._invincible:
             current_time = pygame.time.get_ticks()
             self.image.set_alpha(128 if (current_time // 100) % 2 == 0 else 255)
-            if current_time - self.hurt_time > self.invincibility_duration:
-                self.invincible = False
+            if current_time - self._hurt_time > self._invincibility_duration:
+                self._invincible = False
                 self.image.set_alpha(255)
 
         keys = pygame.key.get_pressed()
         is_moving = False 
 
-        if not self.invincible:
+        if not self._invincible:
             if keys[pygame.K_d]:
-                self.rect.x += self.speed
-                self.direcao = "direita"
+                self.rect.x += self._speed
+                self._direcao = "direita"
                 is_moving = True
             if keys[pygame.K_a]:
-                self.rect.x -= self.speed
-                self.direcao = "esquerda"
+                self.rect.x -= self._speed
+                self._direcao = "esquerda"
                 is_moving = True
         
         self.animar(is_moving)
         
-        if not self.invincible and keys[pygame.K_w] and self.on_ground:
-            self.velocity_y = self.jump_strength
-            self.on_ground = False 
+        if not self._invincible and keys[pygame.K_w] and self._on_ground:
+            self._velocity_y = self._jump_strength
+            self._on_ground = False 
             jump_sound.play()
 
-        self.velocity_y += self.gravity
-        self.rect.y += self.velocity_y
+        self._velocity_y += self._gravity
+        self.rect.y += self._velocity_y
         
-        self.on_ground = False
+        self._on_ground = False
         if self.rect.bottom >= chao_y:
             self.rect.bottom = chao_y
-            self.velocity_y = 0
-            self.on_ground = True
+            self._velocity_y = 0
+            self._on_ground = True
 
-        if self.velocity_y > 0:
+        if self._velocity_y > 0:
             hits = pygame.sprite.spritecollide(self, plataforms_group, False)
             if hits:
                 closest_platform = min(hits, key=lambda p: p.rect.top)
                 if self.rect.bottom > closest_platform.rect.top:
                     self.rect.bottom = closest_platform.rect.top
-                    self.velocity_y = 0
-                    self.on_ground = True
+                    self._velocity_y = 0
+                    self._on_ground = True
         
         if self.rect.left < 0: self.rect.left = 0
         if self.rect.right > level_width: self.rect.right = level_width
@@ -109,10 +110,10 @@ class Plataform(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, top_tile_img, body_tile_img):
         super().__init__()
         self.image = pygame.Surface([w,h])
-        tile_w, tile_h = top_tile_img.get_size()
+        tile_w, tile_h = top_tile_img.get_size() #Por serem atributos loais que só existem dentro de __init__, naturalmente ja externamente inacessiveis 
 
-        for tile_x in range(0, w, tile_w):
-            for tile_y in range(0, h, tile_h):
+        for tile_x in range(0, w, tile_w):  #Por serem atributos loais que só existem dentro de __init__, naturalmente ja externamente inacessiveis 
+            for tile_y in range(0, h, tile_h): #Por serem atributos loais que só existem dentro de __init__, naturalmente ja externamente inacessiveis 
                 if tile_y == 0:
                     self.image.blit(top_tile_img, (tile_x, tile_y))
                 else:
@@ -136,113 +137,113 @@ class Honey(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y, enemy_type, patrol_start, patrol_end):
         super().__init__()
-        self.enemy_type = enemy_type
-        self.indice_animacao = 0
-        self.velocidade_animacao = 0.1
-        self.contador_frame = 0
+        self._enemy_type = enemy_type
+        self._indice_animacao = 0
+        self._velocidade_animacao = 0.1
+        self._contador_frame = 0
 
-        if self.enemy_type == 'bear':
+        if self._enemy_type == 'bear':
             try:
-                sprites_originais = [pygame.image.load(f"Assets/Urso/urso_{i}.png").convert_alpha() for i in [1, 2]]
-                self.sprites_direita = [pygame.transform.scale(img, (87, 45)) for img in sprites_originais]
-                self.sprites_esquerda = [pygame.transform.flip(img, True, False) for img in self.sprites_direita]
+                _sprites_originais = [pygame.image.load(f"Assets/Urso/urso_{i}.png").convert_alpha() for i in [1, 2]]
+                self._sprites_direita = [pygame.transform.scale(img, (87, 45)) for img in _sprites_originais]
+                self._sprites_esquerda = [pygame.transform.flip(img, True, False) for img in self._sprites_direita]
             except pygame.error as e:
                 print(f"Erro ao carregar sprites do urso: {e}")
-                fallback_surf = pygame.Surface([70, 50]); fallback_surf.fill((88, 41, 0))
-                self.sprites_direita = [fallback_surf] * 2
-                self.sprites_esquerda = [fallback_surf] * 2
-            self.image = self.sprites_direita[self.indice_animacao]
-            self.speed_x, self.speed_y = 2, 0
+                _fallback_surf = pygame.Surface([70, 50]); _fallback_surf.fill((88, 41, 0))
+                self._sprites_direita = [_fallback_surf] * 2
+                self._sprites_esquerda = [_fallback_surf] * 2
+            self.image = self._sprites_direita[self._indice_animacao]
+            self._speed_x, self._speed_y = 2, 0
 
-        elif self.enemy_type == 'bee':
+        elif self._enemy_type == 'bee':
             try:
-                sprites_originais = [pygame.image.load(f"Assets/Abelha/abelha_{i}.png").convert_alpha() for i in range(1, 5)]
-                self.sprites = [pygame.transform.scale(img, (96, 96)) for img in sprites_originais]
+                _sprites_originais = [pygame.image.load(f"Assets/Abelha/abelha_{i}.png").convert_alpha() for i in range(1, 5)]
+                self._sprites = [pygame.transform.scale(img, (96, 96)) for img in _sprites_originais]
             except pygame.error as e:
                 print(f"Erro ao carregar sprites da abelha: {e}")
-                fallback_surf = pygame.Surface([48, 48]); fallback_surf.fill((255, 255, 0))
-                self.sprites = [fallback_surf] * 4
-            self.image = self.sprites[self.indice_animacao]
-            self.speed_x, self.speed_y = 0, 2
+                _fallback_surf = pygame.Surface([48, 48]); _fallback_surf.fill((255, 255, 0))
+                self._sprites = [_fallback_surf] * 4
+            self.image = self._sprites[self._indice_animacao]
+            self._speed_x, self._speed_y = 0, 2
         
         self.rect = self.image.get_rect(bottomleft=(x, y))
         self.mask = pygame.mask.from_surface(self.image)
-        self.patrol_start = patrol_start
-        self.patrol_end = patrol_end
+        self._patrol_start = patrol_start
+        self._patrol_end = patrol_end
 
     def animar(self):
-        self.contador_frame += self.velocidade_animacao
-        if self.contador_frame >= 1:
-            self.contador_frame = 0
-            if self.enemy_type == 'bear':
-                self.indice_animacao = (self.indice_animacao + 1) % len(self.sprites_direita)
-                self.image = self.sprites_direita[self.indice_animacao] if self.speed_x > 0 else self.sprites_esquerda[self.indice_animacao]
-            elif self.enemy_type == 'bee':
-                self.indice_animacao = (self.indice_animacao + 1) % len(self.sprites)
-                self.image = self.sprites[self.indice_animacao]
+        self._contador_frame += self._velocidade_animacao
+        if self._contador_frame >= 1:
+            self._contador_frame = 0
+            if self._enemy_type == 'bear':
+                self._indice_animacao = (self._indice_animacao + 1) % len(self._sprites_direita)
+                self.image = self._sprites_direita[self._indice_animacao] if self._speed_x > 0 else self._sprites_esquerda[self._indice_animacao]
+            elif self._enemy_type == 'bee':
+                self._indice_animacao = (self._indice_animacao + 1) % len(self._sprites)
+                self.image = self._sprites[self._indice_animacao]
         
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self, *args):
-        if self.enemy_type == 'bear':
-            self.rect.x += self.speed_x
-            if self.rect.right > self.patrol_end or self.rect.left < self.patrol_start:
-                self.speed_x *= -1
-        elif self.enemy_type == 'bee':
-            self.rect.y += self.speed_y
+        if self._enemy_type == 'bear':
+            self.rect.x += self._speed_x
+            if self.rect.right > self._patrol_end or self.rect.left < self._patrol_start:
+                self._speed_x *= -1
+        elif self._enemy_type == 'bee':
+            self.rect.y += self._speed_y
             if self.rect.bottom > chao_y or self.rect.top < 10:
-                self.speed_y *= -1
+                self._speed_y *= -1
         self.animar()
 
 class Boss(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.health = 100
+        self.health = 100 # Atributo público, pois a vida do chefe será modificada de fora da classe
         
         try:
-            sprites_originais = [pygame.image.load(f"Assets/Boss/abelha_rainha_{i}.png").convert_alpha() for i in [1, 2]]
-            self.sprites_direita = [pygame.transform.scale(img, (120, 100)) for img in sprites_originais]
-            self.sprites_esquerda = [pygame.transform.flip(img, True, False) for img in self.sprites_direita]
+            _sprites_originais = [pygame.image.load(f"Assets/Boss/abelha_rainha_{i}.png").convert_alpha() for i in [1, 2]]
+            self._sprites_direita = [pygame.transform.scale(img, (120, 100)) for img in _sprites_originais]
+            self._sprites_esquerda = [pygame.transform.flip(img, True, False) for img in self._sprites_direita]
         except pygame.error as e:
             print(f"Erro ao carregar sprites do Boss: {e}")
-            fallback_surf = pygame.Surface([120, 100]); fallback_surf.fill((255, 200, 0))
-            self.sprites_direita = [fallback_surf] * 2
-            self.sprites_esquerda = [fallback_surf] * 2
+            _fallback_surf = pygame.Surface([120, 100]); _fallback_surf.fill((255, 200, 0))
+            self._sprites_direita = [_fallback_surf] * 2
+            self._sprites_esquerda = [_fallback_surf] * 2
 
-        self.indice_animacao = 0
-        self.velocidade_animacao = 0.2
-        self.contador_frame = 0
+        self._indice_animacao = 0
+        self._velocidade_animacao = 0.2
+        self._contador_frame = 0
         
-        self.speed_x = 4
-        self.image = self.sprites_direita[self.indice_animacao]
+        self._speed_x = 4
+        self.image = self._sprites_direita[self._indice_animacao]
         self.rect = self.image.get_rect(center=(SCREEN_WIDTH / (2 * zoom_level), 100))
         self.mask = pygame.mask.from_surface(self.image)
 
-        self.shoot_delay = 1000
-        self.last_shot_time = pygame.time.get_ticks()
+        self._shoot_delay = 1000
+        self._last_shot_time = pygame.time.get_ticks()
 
     def animar(self):
-        self.contador_frame += self.velocidade_animacao
-        if self.contador_frame >= 1:
-            self.contador_frame = 0
-            self.indice_animacao = (self.indice_animacao + 1) % len(self.sprites_direita)
+        self._contador_frame += self._velocidade_animacao
+        if self._contador_frame >= 1:
+            self._contador_frame = 0
+            self._indice_animacao = (self._indice_animacao + 1) % len(self._sprites_direita)
             
-            if self.speed_x > 0:
-                self.image = self.sprites_direita[self.indice_animacao]
+            if self._speed_x > 0:
+                self.image = self._sprites_direita[self._indice_animacao]
             else:
-                self.image = self.sprites_esquerda[self.indice_animacao]
+                self.image = self._sprites_esquerda[self._indice_animacao]
         
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self, all_sprites_group, stingers_group):
         self.animar()
-        self.rect.x += self.speed_x
+        self.rect.x += self._speed_x
         if self.rect.right > game_surface.get_width() or self.rect.left < 0:
-            self.speed_x *= -1
+            self._speed_x *= -1
 
         now = pygame.time.get_ticks()
-        if now - self.last_shot_time > self.shoot_delay:
-            self.last_shot_time = now
+        if now - self._last_shot_time > self._shoot_delay:
+            self._last_shot_time = now
             stinger = Stinger(self.rect.centerx, self.rect.bottom)
             all_sprites_group.add(stinger)
             stingers_group.add(stinger)
@@ -260,10 +261,10 @@ class Stinger(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect(center=(x,y))
         self.mask = pygame.mask.from_surface(self.image)
-        self.speed_y = 7.5
+        self._speed_y = 7.5
 
     def update(self, *args):
-        self.rect.y += self.speed_y
+        self.rect.y += self._speed_y
         if self.rect.top > game_surface.get_height():
             self.kill()
 
@@ -273,10 +274,10 @@ class Water(pygame.sprite.Sprite):
         self.image = pygame.Surface([10, 10])
         self.image.fill((0,150,255))
         self.rect = self.image.get_rect(center=(x, y))
-        self.speed_y = -12
+        self._speed_y = -12
 
     def update(self, *args):
-        self.rect.y += self.speed_y
+        self.rect.y += self._speed_y
         if self.rect.bottom < 0:
             self.kill()
 
@@ -477,7 +478,8 @@ def setup_level():
 
     all_sprites.add(player)
     player.rect.x, player.rect.y = 100, 300
-    player.health, player.invincible, player.velocity_y = player.total_health, False, 0
+    # Acessando atributos "privados" do player aqui, mas é dentro do contexto de setup do jogo.
+    player._health, player._invincible, player._velocity_y = player._total_health, False, 0 
 
     npc = Npc(100, chao_y, npc_img) # Cria o NPC na posição x=100, no chão
     all_sprites.add(npc)
@@ -514,7 +516,7 @@ def setup_boss_level():
     mangueira_sprite = Mangueira(mangueira_x_pos, chao_y_boss)
     all_sprites.add(mangueira_sprite)
     
-    player.rect.x, player.rect.bottom, player.velocity_y = 100, chao_y_boss, 0
+    player.rect.x, player.rect.bottom, player._velocity_y = 100, chao_y_boss, 0
     
 # --- 5. VARIÁVEIS DE CONTROLE DO JOGO ---
 game_state = 'intro'
@@ -587,14 +589,14 @@ if __name__ == '__main__':
             if pygame.sprite.spritecollide(player, honey_group, True):
                 honey_score += 1; collect_sound.play()
             
-            if not player.invincible:
+            if not player._invincible:
                 enemy_hits = pygame.sprite.spritecollide(player, enemies_group, False, pygame.sprite.collide_mask)
                 if enemy_hits:
                     enemy = enemy_hits[0]
-                    player.invincible, player.hurt_time = True, pygame.time.get_ticks()
-                    player.health -= 1; hurt_sound.play()
-                    player.rect.x += -player.knockback_strength if player.rect.centerx < enemy.rect.centerx else player.knockback_strength
-                    player.velocity_y = -8
+                    player._invincible, player._hurt_time = True, pygame.time.get_ticks()
+                    player._health -= 1; hurt_sound.play()
+                    player.rect.x += -player._knockback_strength if player.rect.centerx < enemy.rect.centerx else player._knockback_strength
+                    player._velocity_y = -8
             
             target_camera_x = player.rect.centerx - (game_surface.get_width() / 2)
             camera_x += (target_camera_x - camera_x) * camera_smoothing
@@ -604,7 +606,7 @@ if __name__ == '__main__':
             if honey_score >= total_honey:
                 game_state = 'boss_level'
                 pygame.mixer.music.load(boss_music); pygame.mixer.music.play(loops=-1)
-            if player.health <= 0: game_state = 'game_over'
+            if player._health <= 0: game_state = 'game_over'
             
             # Desenho da Fase 1
             draw_background(game_surface, camera_x, background_images)
@@ -616,7 +618,8 @@ if __name__ == '__main__':
             scaled_surface = pygame.transform.scale(game_surface, (SCREEN_WIDTH, SCREEN_HEIGHT))
             display.blit(scaled_surface, (0, 0))
             
-            draw_lives(display, player.health, player.total_health, full_heart_img, empty_heart_img)
+            # Acessando _health para desenhar na tela
+            draw_lives(display, player._health, player._total_health, full_heart_img, empty_heart_img) 
             
             honey_y_pos = 55 
             display.blit(honey_pot_ui_img, (10, honey_y_pos))
@@ -636,16 +639,17 @@ if __name__ == '__main__':
             player.update(plataforms_group); boss_group.update(all_sprites, stingers_group)
             stingers_group.update(); water_group.update()
             
-            if not player.invincible and pygame.sprite.spritecollide(player, stingers_group, True, pygame.sprite.collide_mask):
-                player.invincible, player.hurt_time = True, pygame.time.get_ticks()
-                player.health -= 1; hurt_sound.play()
-                player.velocity_y = -8
+            if not player._invincible and pygame.sprite.spritecollide(player, stingers_group, True, pygame.sprite.collide_mask):
+                player._invincible, player._hurt_time = True, pygame.time.get_ticks()
+                player._health -= 1; hurt_sound.play()
+                player._velocity_y = -8
             
             if boss_group.sprite:
                 if pygame.sprite.groupcollide(water_group, boss_group, True, False, pygame.sprite.collide_mask):
-                    boss_group.sprite.health -= 1
+                    # health do boss é publico pois é diretamente afetado por uma ação do jogador (atingido pela água)
+                    boss_group.sprite.health -= 1 
             
-            if player.health <= 0: game_state = 'game_over'
+            if player._health <= 0: game_state = 'game_over'
             if boss_group.sprite and boss_group.sprite.health <= 0: game_state = 'you_win'
             
             draw_background(game_surface, 0, boss_background_images)
@@ -653,7 +657,8 @@ if __name__ == '__main__':
             scaled_surface = pygame.transform.scale(game_surface, (SCREEN_WIDTH, SCREEN_HEIGHT))
             display.blit(scaled_surface, (0, 0))
             
-            draw_lives(display, player.health, player.total_health, full_heart_img, empty_heart_img)
+            # Acessando _health para desenhar na tela
+            draw_lives(display, player._health, player._total_health, full_heart_img, empty_heart_img)
             if boss_group.sprite:
                 boss_health_text = game_font.render(f'Vida Chefe: {boss_group.sprite.health}', True, (255, 255, 0))
                 display.blit(boss_health_text, (SCREEN_WIDTH - 300, 10))
