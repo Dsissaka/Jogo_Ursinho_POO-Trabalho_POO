@@ -37,3 +37,6 @@ Uma Classe p jogo (classe Pai);
 * Guilherme Batalini Vilches  [@GVilches99] (https://github.com/GVilches99)
 * Carlos Eduardo Nascimento   [@Carloncio] (https://github.com/Carloncio)
 * Gabriel Henrique Dias Gochs [@Gabrielchubs] (https://github.com/Gabrielchubs)
+
+## Observações
+Para testar as versões Beta, coloque a pasta Biblioteca dentro da pasta Beta
